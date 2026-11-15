@@ -1,0 +1,9 @@
+pnpm-lock.yaml
+**/payload-types.ts
+**/next-env.d.ts
+**/importMap.js
+**/migrations/**
+.next/
+.audit/
+test-results/
+playwright-report/

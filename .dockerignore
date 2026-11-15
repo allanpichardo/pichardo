@@ -1,0 +1,14 @@
+.git
+.audit
+**/node_modules
+**/.next
+**/*.tsbuildinfo
+**/.env
+**/.env.*
+**/media
+**/.data
+**/backups
+**/coverage
+**/playwright-report
+**/test-results
+.DS_Store

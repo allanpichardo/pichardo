@@ -1,0 +1,42 @@
+{
+  "name": "pichardo",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@12.18.0",
+  "engines": {
+    "node": "24.22.3"
+  },
+  "scripts": {
+    "dev": "pnpm --parallel --filter './apps/*' dev",
+    "dev:artist": "pnpm --filter @pichardo/artist dev",
+    "dev:professional": "pnpm --filter @pichardo/professional dev",
+    "infra:up": "docker compose -f infra/compose.dev.yaml up -d --wait",
+    "infra:down": "docker compose -f infra/compose.dev.yaml down",
+    "build": "pnpm --filter './apps/*' build",
+    "lint": "eslint . --max-warnings 0",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "typecheck": "pnpm --filter './apps/*' typecheck",
+    "test": "vitest run",
+    "test:integration": "pnpm --filter @pichardo/artist test:integration",
+    "test:e2e": "playwright test",
+    "test:containers": "bash scripts/test-containers.sh",
+    "payload": "pnpm --filter @pichardo/artist payload",
+    "generate": "pnpm --filter @pichardo/artist generate",
+    "migrate": "pnpm payload migrate",
+    "migrate:create": "pnpm payload migrate:create",
+    "migrate:status": "pnpm payload migrate:status",
+    "bootstrap": "pnpm --filter @pichardo/artist bootstrap"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.65.1",
+    "@types/node": "24.10.1",
+    "eslint": "9.39.5",
+    "eslint-config-next": "16.4.6",
+    "eslint-config-prettier": "10.1.8",
+    "prettier": "3.10.1",
+    "typescript": "6.0.3",
+    "typescript-eslint": "8.72.2",
+    "vitest": "5.1.0"
+  }
+}

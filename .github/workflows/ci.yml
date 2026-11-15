@@ -1,0 +1,100 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    services:
+      postgres:
+        image: postgres:18
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: artist_test
+        ports:
+          - 127.0.0.1:5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d artist_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/artist_test
+      MEDIA_DIR: ${{ runner.temp }}/pichardo-test-media
+      ARTIST_URL: http://127.0.0.1:3000
+      PROFESSIONAL_URL: http://127.0.0.1:3001
+      ADMIN_EMAIL: smoke@example.test
+      E2E_PRODUCTION: 'true'
+      NODE_ENV: test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      - name: Generate disposable test secrets
+        shell: bash
+        run: |
+          echo "PAYLOAD_SECRET=$(openssl rand -hex 32)" >> "$GITHUB_ENV"
+          echo "ADMIN_PASSWORD=$(openssl rand -hex 24)" >> "$GITHUB_ENV"
+          mkdir -p "$MEDIA_DIR"
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm generate
+      - name: Check generated Payload artifacts
+        run: git diff --exit-code -- apps/artist/src/payload-types.ts 'apps/artist/src/app/(payload)/admin/importMap.js'
+      - run: pnpm format:check
+      - run: pnpm lint
+      - run: pnpm typecheck
+      - run: pnpm test
+      - run: pnpm migrate
+      - run: pnpm migrate
+      - run: pnpm test:integration
+      - run: pnpm build
+        env:
+          NODE_ENV: production
+      - run: pnpm bootstrap
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm test:e2e
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: browser-diagnostics
+          path: |
+            playwright-report/
+            test-results/
+          if-no-files-found: ignore
+
+  containers:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm test:containers
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: container-diagnostics
+          path: |
+            test-results/
+            playwright-report/
+          if-no-files-found: ignore

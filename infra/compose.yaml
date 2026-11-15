@@ -1,0 +1,85 @@
+name: pichardo
+
+services:
+  artist:
+    image: ${ARTIST_IMAGE:?Set ARTIST_IMAGE to an immutable image tag}
+    restart: unless-stopped
+    init: true
+    environment:
+      NODE_ENV: production
+      HOSTNAME: 0.0.0.0
+      PORT: '3000'
+      ARTIST_URL: ${ARTIST_URL:-https://allanpichardo.com}
+      PAYLOAD_SECRET: ${PAYLOAD_SECRET:?Set a random PAYLOAD_SECRET of at least 32 characters}
+      DATABASE_URL: postgresql://${POSTGRES_USER:-payload}:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-artist}
+      MEDIA_DIR: /app/media
+    ports:
+      - '127.0.0.1:${ARTIST_PORT:-3000}:3000'
+    volumes:
+      - type: bind
+        source: ${MEDIA_HOST_DIR:?Set an absolute existing MEDIA_HOST_DIR}
+        target: /app/media
+        bind:
+          create_host_path: false
+    networks:
+      - default
+      - database
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - "fetch('http://127.0.0.1:3000/health').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 60s
+
+  professional:
+    image: ${PROFESSIONAL_IMAGE:?Set PROFESSIONAL_IMAGE to an immutable image tag}
+    restart: unless-stopped
+    init: true
+    environment:
+      NODE_ENV: production
+      HOSTNAME: 0.0.0.0
+      PORT: '3000'
+      PROFESSIONAL_URL: ${PROFESSIONAL_URL:-https://pichardo.dev}
+    ports:
+      - '127.0.0.1:${PROFESSIONAL_PORT:-3001}:3000'
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - "fetch('http://127.0.0.1:3000/health').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 30s
+
+  postgres:
+    image: postgres:18.7-bookworm
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-payload}
+      POSTGRES_DB: ${POSTGRES_DB:-artist}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql
+    networks:
+      - database
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U "$$POSTGRES_USER" -d "$$POSTGRES_DB"']
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+volumes:
+  postgres_data:
+
+networks:
+  database:
+    internal: true
