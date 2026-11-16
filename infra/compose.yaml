@@ -38,6 +38,42 @@ services:
       retries: 6
       start_period: 60s
 
+  artist-worker:
+    image: ${ARTIST_WORKER_IMAGE:?Set ARTIST_WORKER_IMAGE to the matching artist tooling image}
+    restart: unless-stopped
+    init: true
+    command: ['pnpm', 'media:worker']
+    stop_grace_period: 30s
+    cpus: 2
+    mem_limit: 2g
+    environment:
+      NODE_ENV: production
+      ARTIST_URL: ${ARTIST_URL:-https://allanpichardo.com}
+      PAYLOAD_SECRET: ${PAYLOAD_SECRET:?Set a random PAYLOAD_SECRET of at least 32 characters}
+      DATABASE_URL: postgresql://${POSTGRES_USER:-payload}:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-artist}
+      MEDIA_DIR: /app/media
+    volumes:
+      - type: bind
+        source: ${MEDIA_HOST_DIR:?Set an absolute existing MEDIA_HOST_DIR}
+        target: /app/media
+        bind:
+          create_host_path: false
+    networks:
+      - database
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - "const fs=require('node:fs'),p='/app/media/work/worker-heartbeat';try{const h=JSON.parse(fs.readFileSync(p,'utf8')),s=fs.readFileSync('/proc/'+h.pid+'/stat','utf8'),start=s.slice(s.lastIndexOf(')')+2).trim().split(/\\s+/)[19];process.exit(h.hostname===require('node:os').hostname()&&h.processStart===start&&Date.now()-fs.statSync(p).mtimeMs<30000?0:1)}catch{process.exit(1)}"
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 60s
+
   professional:
     image: ${PROFESSIONAL_IMAGE:?Set PROFESSIONAL_IMAGE to an immutable image tag}
     restart: unless-stopped

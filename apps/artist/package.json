@@ -10,7 +10,9 @@
     "payload": "payload",
     "generate": "payload generate:types && payload generate:importmap",
     "bootstrap": "payload run src/scripts/bootstrap.ts",
-    "test:integration": "vitest run --config vitest.integration.config.ts"
+    "test:integration": "vitest run --config vitest.integration.config.ts",
+    "media:worker": "payload run src/scripts/media-worker.ts",
+    "media:reprocess": "payload run src/scripts/media-reprocess.ts"
   },
   "dependencies": {
     "@payloadcms/db-postgres": "3.93.0",
@@ -20,7 +22,8 @@
     "payload": "3.93.0",
     "react": "19.3.1",
     "react-dom": "19.3.1",
-    "sharp": "0.35.5"
+    "sharp": "0.35.5",
+    "@payloadcms/ui": "3.93.0"
   },
   "devDependencies": {
     "@types/react": "19.2.7",

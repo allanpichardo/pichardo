@@ -52,6 +52,8 @@ jobs:
           echo "ADMIN_PASSWORD=$(openssl rand -hex 24)" >> "$GITHUB_ENV"
           mkdir -p "$MEDIA_DIR"
       - run: pnpm install --frozen-lockfile
+      - name: Install media codecs
+        run: sudo apt-get update && sudo apt-get install --yes ffmpeg
       - run: pnpm generate
       - name: Check generated Payload artifacts
         run: git diff --exit-code -- apps/artist/src/payload-types.ts 'apps/artist/src/app/(payload)/admin/importMap.js'
@@ -88,6 +90,8 @@ jobs:
           node-version-file: .node-version
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      - name: Install media codecs
+        run: sudo apt-get update && sudo apt-get install --yes ffmpeg
       - run: pnpm exec playwright install --with-deps chromium
       - run: pnpm test:containers
       - uses: actions/upload-artifact@v4

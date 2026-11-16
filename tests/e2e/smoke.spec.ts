@@ -53,21 +53,58 @@ test('Payload login, image upload, variants, and public retrieval work', async (
   expect(id).toBeTruthy();
   const anonymous = await playwright.request.newContext();
   try {
+    await expect
+      .poll(
+        async () => {
+          const response = await anonymous.get(`${artist}/api/media/${id}`);
+          return response.ok()
+            ? (await response.json()).processingStatus
+            : 'pending';
+        },
+        {timeout: 120000},
+      )
+      .toBe('ready');
     const metadata = await anonymous.get(`${artist}/api/media/${id}`);
     expect(metadata.ok()).toBe(true);
     const media = await metadata.json();
-    for (const url of [
-      media.url,
-      media.sizes.small.url,
-      media.sizes.medium.url,
-      media.sizes.large.url,
+    for (const descriptor of [
+      media,
+      media.sizes.small,
+      media.sizes.medium,
+      media.sizes.large,
     ]) {
-      const response = await anonymous.get(url);
+      const response = await anonymous.get(descriptor.url);
       expect(response.ok()).toBe(true);
-      expect(response.headers()['content-type']).toContain('image/png');
+      expect(response.headers()['content-type']).toContain(descriptor.mimeType);
       expect(response.headers()['cache-control']).toContain('public');
       expect(response.headers()['cache-control']).toContain('max-age=3600');
     }
+    await page
+      .getByRole('button', {name: 'Reprocess media', exact: true})
+      .click();
+    await expect(
+      page.getByText('Processing queued. Reload to see the latest status.', {
+        exact: true,
+      }),
+    ).toBeVisible();
+    await expect
+      .poll(
+        async () => {
+          const response = await anonymous.get(`${artist}/api/media/${id}`);
+          if (!response.ok()) return false;
+          const current = await response.json();
+          return (
+            current.processingStatus === 'ready' &&
+            current.filename !== media.filename
+          );
+        },
+        {timeout: 120000},
+      )
+      .toBe(true);
+    const reprocessed = await (
+      await anonymous.get(`${artist}/api/media/${id}`)
+    ).json();
+    expect((await anonymous.get(reprocessed.url)).ok()).toBe(true);
     expect((await anonymous.delete(`${artist}/api/media/${id}`)).status()).toBe(
       403,
     );

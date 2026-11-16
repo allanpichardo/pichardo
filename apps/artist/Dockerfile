@@ -20,6 +20,9 @@ RUN PAYLOAD_SECRET=build-only-placeholder-not-a-runtime-secret \
     pnpm --filter @pichardo/artist build
 
 FROM dependencies AS tooling
+RUN apt-get update \
+    && apt-get install --yes --no-install-recommends ffmpeg \
+    && rm -rf /var/lib/apt/lists/*
 COPY --from=build /app/tsconfig.base.json ./tsconfig.base.json
 COPY --from=build /app/apps/artist/src ./apps/artist/src
 COPY --from=build /app/apps/artist/tsconfig.json ./apps/artist/tsconfig.json
@@ -30,6 +33,9 @@ USER app
 CMD ["pnpm", "payload", "migrate"]
 
 FROM base AS runner
+RUN apt-get update \
+    && apt-get install --yes --no-install-recommends ffmpeg \
+    && rm -rf /var/lib/apt/lists/*
 ENV NODE_ENV=production
 ENV HOSTNAME=0.0.0.0
 ENV PORT=3000

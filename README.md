@@ -13,6 +13,8 @@ This foundation contains minimal public pages, CMS administration, and operating
 
 Install Node **24.22.3**, pnpm **12.18.0**, Docker Engine or Docker Desktop, and Docker Compose. The Node version is recorded for asdf and other version managers. Select that version before installing dependencies.
 
+Install FFmpeg and ffprobe with the SVT-AV1, H.264, Opus, and AAC codecs for artist uploads and processing. On macOS use `brew install ffmpeg`; on Debian or Ubuntu use `sudo apt-get install ffmpeg`. Production artist images include these tools.
+
 ```sh
 pnpm install --frozen-lockfile
 cp apps/artist/.env.example apps/artist/.env
@@ -28,11 +30,23 @@ pnpm generate
 pnpm dev
 ```
 
+Run `pnpm dev:worker` in a second terminal using the same artist environment. Media uploads queue work until the worker is running. It processes one file at a time and logs `Media worker ready` after startup recovery and acquiring the database lock. A second worker cannot process the same queue concurrently.
+
 Open the URLs above. To create an administrator, put `ADMIN_EMAIL` and a password of at least 16 characters in the artist environment file and run `pnpm bootstrap`. Remove those two values from the file afterward. Open http://localhost:3000/admin and log in. Repeating bootstrap for an existing email does not reset its password.
 
 Use `pnpm dev:artist` or `pnpm dev:professional` to run one app. The professional app needs neither the database nor artist configuration. Normal development uses host processes and hot reload, without Docker image rebuilds.
 
-`pnpm infra:down` stops the development database without deleting its named volume. Uploads default to `apps/artist/media` and survive process restarts. Every image in this initial Media collection is public.
+`pnpm infra:down` stops the development database without deleting its named volume. Media defaults to `apps/artist/media` and survives process restarts. Originals and temporary work are private. Completed image renditions, video sources, posters, and previews are public.
+
+## Upload artist media
+
+Use the Media collection in Payload and supply alt text. Images may be JPEG, PNG, or WebP; video sources may be MP4, MOV, or WebM. The limit is 50,000,000 bytes per file. Saving queues background processing. The CMS shows queued, processing, ready, or failed status and provides a retry action. Replacing a file keeps its previous publication available until the new outputs are ready.
+
+Images use WebP quality 90 only when the candidate is smaller. Otherwise the public rendition is a copy of the uploaded image. Responsive widths are 400, 800, and 1600 pixels without enlargement. Videos produce AV1 WebM and H.264 MP4 files fitted within 1920×1080 at no more than 30 fps, plus a WebP poster and sampled looping GIF preview. Public-site playback and hover behavior are left for the design work.
+
+`MEDIA_DIR` contains separate `originals`, `work`, and `published` directories. Retain the entire directory with the database. Originals remain until their Media record is deleted; replacing a file retains its earlier originals. Retired public generations remain for 24 hours. The empty directory configured for Payload's native file storage is deliberately separate from actual files.
+
+The media migration imports existing images and their variants without changing their IDs or URLs. It copies and verifies private originals before recording the publication. It does not re-encode existing images. To queue a new optimized generation for one record, run `MEDIA_ID=123 pnpm --filter @pichardo/artist media:reprocess`. Omit `MEDIA_ID` to queue all retained media. Keep the worker running to process the queue.
 
 ## Run checks
 
@@ -109,7 +123,7 @@ Production image tags, loopback ports, database settings, and host media path ar
 
 Follow [the operating guide](docs/operations.md) for image builds, administrator bootstrap, explicit migrations, independent app deployment, health checks, image rollback, manual backups, and isolated restoration.
 
-Production has exactly three long-running containers. Only the application ports bind to host loopback. PostgreSQL uses a private Docker network and has no host port. The existing host Tunnel maps allanpichardo.com to `http://localhost:3000` and pichardo.dev to `http://localhost:3001`. This repository does not manage it.
+Production has four long-running containers, including `artist-worker`. The worker uses the matching artist tooling image, PostgreSQL, and the media mount, with no published port. Only the application ports bind to host loopback. PostgreSQL uses a private Docker network and has no host port. The existing host Tunnel maps allanpichardo.com to `http://localhost:3000` and pichardo.dev to `http://localhost:3001`. This repository does not manage it.
 
 Backups are manual. No cron job, retention deletion, image publishing, or production deployment automation is installed.
 

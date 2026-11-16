@@ -27,6 +27,23 @@ async function login() {
   return {Authorization: `JWT ${token}`};
 }
 
+async function waitForMedia(id) {
+  const deadline = Date.now() + 120000;
+  while (Date.now() < deadline) {
+    const response = await fetch(`${artist}/api/media/${id}`, {headers});
+    assert.equal(response.status, 200);
+    const media = await response.json();
+    assert.notEqual(
+      media.processingStatus,
+      'failed',
+      'Media processing succeeds.',
+    );
+    if (media.processingStatus === 'ready') return media;
+    await new Promise((resolve) => setTimeout(resolve, 500));
+  }
+  assert.fail('Media worker did not publish within two minutes.');
+}
+
 for (const origin of [artist, professional]) {
   const response = await fetch(`${origin}/health`);
   assert.equal(response.status, 200, `${origin} is healthy.`);
@@ -60,13 +77,19 @@ if (mode === 'seed') {
     body: data,
   });
   assert.equal(response.status, 201, 'Authenticated image upload succeeds.');
-  const {doc} = await response.json();
+  const {doc: pending} = await response.json();
+  const doc = await waitForMedia(pending.id);
+  const published = await fetch(`${artist}/api/media/file/${doc.filename}`);
+  assert.equal(published.status, 200);
+  const publishedHash = createHash('sha256')
+    .update(Buffer.from(await published.arrayBuffer()))
+    .digest('hex');
   await writeFile(
     stateFile,
     JSON.stringify({
       id: doc.id,
       filename: doc.filename,
-      hash: createHash('sha256').update(file).digest('hex'),
+      hash: publishedHash,
       variants: [
         doc.sizes.small.filename,
         doc.sizes.medium.filename,
@@ -90,7 +113,7 @@ for (const filename of [state.filename, ...state.variants]) {
     const hash = createHash('sha256')
       .update(Buffer.from(await response.arrayBuffer()))
       .digest('hex');
-    assert.equal(hash, state.hash, 'Original media checksum matches.');
+    assert.equal(hash, state.hash, 'Published media checksum matches.');
   }
 }
 process.stdout.write(`Container ${mode} checks passed.\n`);

@@ -69,7 +69,9 @@ export interface Config {
   collections: {
     users: User;
     media: Media;
+    'media-generations': MediaGeneration;
     'payload-kv': PayloadKv;
+    'payload-jobs': PayloadJob;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
     'payload-migrations': PayloadMigration;
@@ -78,7 +80,9 @@ export interface Config {
   collectionsSelect: {
     users: UsersSelect<false> | UsersSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
+    'media-generations': MediaGenerationsSelect<false> | MediaGenerationsSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
+    'payload-jobs': PayloadJobsSelect<false> | PayloadJobsSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
     'payload-migrations': PayloadMigrationsSelect<false> | PayloadMigrationsSelect<true>;
@@ -95,7 +99,13 @@ export interface Config {
   };
   user: User;
   jobs: {
-    tasks: unknown;
+    tasks: {
+      processMedia: TaskProcessMedia;
+      inline: {
+        input: unknown;
+        output: unknown;
+      };
+    };
     workflows: unknown;
   };
 }
@@ -144,7 +154,7 @@ export interface User {
   collection: 'users';
 }
 /**
- * All files in this collection are publicly accessible.
+ * Originals are private. Published files are public after processing.
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "media".
@@ -152,6 +162,42 @@ export interface User {
 export interface Media {
   id: number;
   alt: string;
+  processingStatus?: ('queued' | 'processing' | 'ready' | 'failed') | null;
+  processingError?: string | null;
+  mediaKind?: ('image' | 'video') | null;
+  duration?: number | null;
+  video?: {
+    webm?: {
+      url?: string | null;
+      mimeType?: string | null;
+      filesize?: number | null;
+      width?: number | null;
+      height?: number | null;
+    };
+    mp4?: {
+      url?: string | null;
+      mimeType?: string | null;
+      filesize?: number | null;
+      width?: number | null;
+      height?: number | null;
+    };
+    poster?: {
+      url?: string | null;
+      mimeType?: string | null;
+      filesize?: number | null;
+      width?: number | null;
+      height?: number | null;
+    };
+    preview?: {
+      url?: string | null;
+      mimeType?: string | null;
+      filesize?: number | null;
+      width?: number | null;
+      height?: number | null;
+    };
+  };
+  requestedGeneration?: string | null;
+  publishedGeneration?: string | null;
   updatedAt: string;
   createdAt: string;
   url?: string | null;
@@ -192,6 +238,36 @@ export interface Media {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "media-generations".
+ */
+export interface MediaGeneration {
+  id: number;
+  generation: string;
+  mediaId: number;
+  sourceKey: string;
+  sourceName: string;
+  sourceMimeType: string;
+  sourceBytes: number;
+  sourceHash: string;
+  kind: 'image' | 'video';
+  state: 'queued' | 'processing' | 'ready' | 'failed' | 'deleted';
+  retiredAt?: string | null;
+  artifacts?:
+    | {
+        role: 'primary' | 'small' | 'medium' | 'large' | 'mp4' | 'poster' | 'preview';
+        filename: string;
+        mimeType: string;
+        filesize: number;
+        width: number;
+        height: number;
+        id?: string | null;
+      }[]
+    | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv".
  */
 export interface PayloadKv {
@@ -209,6 +285,98 @@ export interface PayloadKv {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "payload-jobs".
+ */
+export interface PayloadJob {
+  id: number;
+  /**
+   * Input data provided to the job
+   */
+  input?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  taskStatus?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  completedAt?: string | null;
+  totalTried?: number | null;
+  /**
+   * If hasError is true this job will not be retried
+   */
+  hasError?: boolean | null;
+  /**
+   * If hasError is true, this is the error that caused it
+   */
+  error?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  /**
+   * Task execution log
+   */
+  log?:
+    | {
+        executedAt: string;
+        completedAt: string;
+        taskSlug: 'inline' | 'processMedia';
+        taskID: string;
+        input?:
+          | {
+              [k: string]: unknown;
+            }
+          | unknown[]
+          | string
+          | number
+          | boolean
+          | null;
+        output?:
+          | {
+              [k: string]: unknown;
+            }
+          | unknown[]
+          | string
+          | number
+          | boolean
+          | null;
+        state: 'failed' | 'succeeded';
+        error?:
+          | {
+              [k: string]: unknown;
+            }
+          | unknown[]
+          | string
+          | number
+          | boolean
+          | null;
+        id?: string | null;
+      }[]
+    | null;
+  taskSlug?: ('inline' | 'processMedia') | null;
+  queue?: string | null;
+  waitUntil?: string | null;
+  processing?: boolean | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-locked-documents".
  */
 export interface PayloadLockedDocument {
@@ -221,6 +389,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'media';
         value: number | Media;
+      } | null)
+    | ({
+        relationTo: 'media-generations';
+        value: number | MediaGeneration;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -293,6 +465,52 @@ export interface UsersSelect<T extends boolean = true> {
  */
 export interface MediaSelect<T extends boolean = true> {
   alt?: T;
+  processingStatus?: T;
+  processingError?: T;
+  mediaKind?: T;
+  duration?: T;
+  video?:
+    | T
+    | {
+        webm?:
+          | T
+          | {
+              url?: T;
+              mimeType?: T;
+              filesize?: T;
+              width?: T;
+              height?: T;
+            };
+        mp4?:
+          | T
+          | {
+              url?: T;
+              mimeType?: T;
+              filesize?: T;
+              width?: T;
+              height?: T;
+            };
+        poster?:
+          | T
+          | {
+              url?: T;
+              mimeType?: T;
+              filesize?: T;
+              width?: T;
+              height?: T;
+            };
+        preview?:
+          | T
+          | {
+              url?: T;
+              mimeType?: T;
+              filesize?: T;
+              width?: T;
+              height?: T;
+            };
+      };
+  requestedGeneration?: T;
+  publishedGeneration?: T;
   updatedAt?: T;
   createdAt?: T;
   url?: T;
@@ -341,11 +559,71 @@ export interface MediaSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "media-generations_select".
+ */
+export interface MediaGenerationsSelect<T extends boolean = true> {
+  generation?: T;
+  mediaId?: T;
+  sourceKey?: T;
+  sourceName?: T;
+  sourceMimeType?: T;
+  sourceBytes?: T;
+  sourceHash?: T;
+  kind?: T;
+  state?: T;
+  retiredAt?: T;
+  artifacts?:
+    | T
+    | {
+        role?: T;
+        filename?: T;
+        mimeType?: T;
+        filesize?: T;
+        width?: T;
+        height?: T;
+        id?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv_select".
  */
 export interface PayloadKvSelect<T extends boolean = true> {
   key?: T;
   data?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "payload-jobs_select".
+ */
+export interface PayloadJobsSelect<T extends boolean = true> {
+  input?: T;
+  taskStatus?: T;
+  completedAt?: T;
+  totalTried?: T;
+  hasError?: T;
+  error?: T;
+  log?:
+    | T
+    | {
+        executedAt?: T;
+        completedAt?: T;
+        taskSlug?: T;
+        taskID?: T;
+        input?: T;
+        output?: T;
+        state?: T;
+        error?: T;
+        id?: T;
+      };
+  taskSlug?: T;
+  queue?: T;
+  waitUntil?: T;
+  processing?: T;
+  updatedAt?: T;
+  createdAt?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -388,6 +666,16 @@ export interface CollectionsWidget {
     [k: string]: unknown;
   };
   width: 'full';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "TaskProcessMedia".
+ */
+export interface TaskProcessMedia {
+  input: {
+    generationId: number;
+  };
+  output?: unknown;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema

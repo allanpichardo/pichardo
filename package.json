@@ -9,6 +9,7 @@
   "scripts": {
     "dev": "pnpm --parallel --filter './apps/*' dev",
     "dev:artist": "pnpm --filter @pichardo/artist dev",
+    "dev:worker": "pnpm --filter @pichardo/artist media:worker",
     "dev:professional": "pnpm --filter @pichardo/professional dev",
     "infra:up": "docker compose -f infra/compose.dev.yaml up -d --wait",
     "infra:down": "docker compose -f infra/compose.dev.yaml down",

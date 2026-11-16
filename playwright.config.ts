@@ -38,6 +38,12 @@ export default defineConfig({
     ? undefined
     : [
         {
+          command: 'pnpm --filter @pichardo/artist media:worker',
+          wait: {stdout: /Media worker ready/},
+          gracefulShutdown: {signal: 'SIGTERM', timeout: 10000},
+          env: {NODE_ENV: 'test', PAYLOAD_DB_PUSH: 'false'},
+        },
+        {
           command: `pnpm --filter @pichardo/artist ${production ? 'start' : 'dev'}`,
           url: `${artistUrl}/health`,
           timeout: 120000,

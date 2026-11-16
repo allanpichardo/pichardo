@@ -24,9 +24,16 @@ printf '%s\n' "$configured_images" | grep -Fxq "$image" || {
 docker build --file "apps/$target/Dockerfile" --target runner --tag "$image" .
 if [[ "$target" == artist ]]; then
   tooling_image="pichardo-artist-tools:$revision"
+  "${compose[@]}" config --images artist-worker | grep -Fxq "$tooling_image" || {
+    echo "Record $tooling_image in ARTIST_WORKER_IMAGE in $env_file first." >&2
+    exit 1
+  }
   docker build --file apps/artist/Dockerfile --target tooling --tag "$tooling_image" .
   "${compose[@]}" up -d --wait postgres
+  "${compose[@]}" stop artist-worker artist
   ARTIST_IMAGE="$tooling_image" "${compose[@]}" run --rm --no-deps artist pnpm payload migrate
+  "${compose[@]}" up -d --no-deps --wait artist artist-worker
+else
+  "${compose[@]}" up -d --no-deps --wait "$target"
 fi
-"${compose[@]}" up -d --no-deps --wait "$target"
 echo "Healthy deployment of $image."

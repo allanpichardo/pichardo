@@ -16,3 +16,5 @@ export const DELETE = REST_DELETE(config);
 export const PATCH = REST_PATCH(config);
 export const PUT = REST_PUT(config);
 export const OPTIONS = REST_OPTIONS(config);
+
+export const HEAD = REST_GET(config);

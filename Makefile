@@ -9,7 +9,7 @@ export ENV_FILE APP REVISION NAME BACKUP_ROOT BACKUP_DIR RESTORE_ROOT RESTORE_PR
 
 COMPOSE = docker compose --env-file "$$ENV_FILE" -f infra/compose.yaml
 
-.PHONY: help install dev dev-artist dev-professional infra-up infra-down \
+.PHONY: help install dev dev-artist dev-worker dev-professional infra-up infra-down \
 	build build-artist build-professional check lint format format-check typecheck \
 	test test-integration test-e2e test-containers browsers generate bootstrap \
 	migrate migrate-create migrate-status prod-up prod-down prod-status prod-logs \
@@ -26,6 +26,9 @@ dev: ## Run both applications with hot reload.
 
 dev-artist: ## Run only the artist application on port 3000.
 	$(PNPM) dev:artist
+
+dev-worker: ## Run the artist media worker alongside development servers.
+	$(PNPM) dev:worker
 
 dev-professional: ## Run only the professional application on port 3001.
 	$(PNPM) dev:professional

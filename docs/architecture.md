@@ -16,15 +16,23 @@ There is no shared package yet. The canonical person identifier is `https://alla
 
 PostgreSQL 18 stores data in a named volume mounted at `/var/lib/postgresql`. Artist originals and generated variants live in a configurable host directory mounted at `/app/media`. Container recreation replaces executable code without replacing either store. Next.js's writable runtime cache is disposable and does not require a backup.
 
-PostgreSQL sits on an internal Docker network joined only by artist. Professional has no database credentials or database-network membership. Each app publishes a single loopback port. The host-managed Cloudflare Tunnel supplies external connectivity and TLS, so no project-managed reverse proxy or cloudflared container is required.
+PostgreSQL sits on an internal Docker network joined by artist and its media worker. Professional has no database credentials or database-network membership. Each app publishes a single loopback port. The worker publishes no ports. The host-managed Cloudflare Tunnel supplies external connectivity and TLS, so no project-managed reverse proxy or cloudflared container is required.
 
-Backups must cover the database and media together. The manual procedure pauses artist writes, creates a logical dump and media archive, and restarts artist even on backup failure. Restoration uses fresh isolated resources and checks media hashes. Backups remain the operator's responsibility, including off-server copies.
+Backups must cover the database and media together. The manual procedure pauses both artist writers, creates a logical dump and media archive, and restarts whichever writer services were running even on backup failure. Restoration uses fresh isolated resources and checks media hashes. Backups remain the operator's responsibility, including off-server copies.
+
+## Process media before publication
+
+The Media collection remains the CMS upload interface and public catalog. The application validates uploads and retains immutable originals privately before it queues processing in PostgreSQL. The worker uses Sharp for images and FFmpeg for videos. It holds an exclusive database lock and processes one job at a time, with explicit recovery for jobs interrupted by a process crash.
+
+`MEDIA_DIR` is a storage root, not a public static directory. Its originals, working files, and completed publications have separate directories. Payload's native upload directory is inert because its automatic deletion happens before a database deletion can commit. Pipeline-owned delivery checks the published file manifest, streams approved files, and supports byte-range video requests.
+
+Requested and published generations are separate. Replacement processing leaves the previous publication available; only a complete, validated output set can replace it. Publication checks the current generation transactionally so superseded work cannot restore an old upload. Originals remain until record deletion. Retired public generations have a 24-hour retention window.
 
 ## Build and migrate explicitly
 
-Next.js output tracing starts at the repository root so workspace dependencies are included. Docker copies standalone output and static assets. The artist tooling target retains the Payload CLI, source configuration, and versioned migrations. It runs one-off maintenance commands on the same network and media mount as artist, without a fourth long-running service.
+Next.js output tracing starts at the repository root so workspace dependencies are included. Docker copies standalone output and static assets. The artist tooling target retains the Payload CLI, source configuration, versioned migrations, and FFmpeg. It runs the worker and one-off maintenance commands on the same database network and media mount as artist. The web image also includes ffprobe for source validation.
 
-Production never uses automatic schema push or startup migrations. Deployment applies migrations before replacing artist and stops on failure. An older application image can run only if it understands the current schema. Restoring an image does not restore the database.
+Production never uses automatic schema push or startup migrations. Deployment pauses both artist writers, applies migrations, and replaces the artist and worker images together. It stops on failure. An older application image can run only if it understands the current schema. Restoring an image does not restore the database.
 
 Production builds require configuration values to load Payload's code, but do not connect to a database or use production secrets. Docker supplies disposable build values. Runtime containers receive the real configuration through Compose.
 
@@ -38,7 +46,7 @@ Both development and production explicitly use Next.js's supported webpack path.
 
 ## Cache only appropriate responses
 
-Next.js manages its own single-instance filesystem cache. Versioned static assets retain framework cache headers. Public uploaded media gets a bounded one-hour public lifetime through Payload's upload response-header hook. Filenames are not promised immutable, so replacing an image can leave a cached copy for up to that lifetime.
+Next.js manages its own single-instance filesystem cache. Versioned static assets retain framework cache headers. Published media gets a bounded one-hour public lifetime. New publications use immutable generation filenames; existing image URLs remain supported through imported manifests. Record deletion denies further origin reads, while already cached files may remain available for their cache lifetime.
 
 Administrative, authentication, health, and dynamic API responses stay private or uncached. Cloudflare should retain its default static caching without blanket HTML caching. Future preview functionality must preserve the same private-response rule. No Redis, distributed cache, or custom invalidation is needed for one server.
 

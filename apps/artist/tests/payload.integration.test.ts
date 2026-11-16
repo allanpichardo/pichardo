@@ -7,6 +7,7 @@ import path from 'node:path';
 import sharp from 'sharp';
 import {execFile} from 'node:child_process';
 import {promisify} from 'node:util';
+import {cleanMedia} from '../src/media-processing/cleanup';
 
 let payload: Payload;
 let mediaDir: string;
@@ -29,6 +30,7 @@ beforeAll(async () => {
 afterAll(async () => {
   if (payload) {
     for (const id of mediaIds) await payload.delete({collection: 'media', id});
+    await cleanMedia(payload, mediaDir);
     if (userId) await payload.delete({collection: 'users', id: userId});
     await payload.destroy();
   }
@@ -141,16 +143,20 @@ describe('Payload with PostgreSQL', () => {
       }),
     ).rejects.toThrow();
 
-    const media = await payload.create({
+    let media = await payload.create({
       collection: 'media',
       data: {alt: 'Integration image'},
       file,
     });
     mediaIds.push(media.id);
+    expect(media.processingStatus).toBe('queued');
+    await payload.jobs.run({queue: 'media', limit: 1});
+    media = await payload.findByID({collection: 'media', id: media.id});
+    expect(media.processingStatus).toBe('ready');
     expect(media.sizes?.small?.width).toBe(400);
     expect(media.sizes?.medium?.width).toBe(800);
     expect(media.sizes?.large?.width).toBe(1600);
-    const files = await readdir(mediaDir);
+    const files = await readdir(path.join(mediaDir, 'published'));
     expect(files).toContain(media.filename);
     expect(files).toContain(media.sizes?.small?.filename);
     expect(files).toContain(media.sizes?.medium?.filename);

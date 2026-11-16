@@ -11,13 +11,13 @@ mkdir -p -- "$backup_root"
 backup_root=$(cd -- "$backup_root" && pwd)
 backup_dir="$backup_root/$(date -u +%Y%m%dT%H%M%SZ)-$$"
 mkdir -- "$backup_dir.partial"
-restart_artist=0
+restart_services=()
 
 finish() {
   status=$?
   trap - EXIT
-  if [[ "$restart_artist" == 1 ]]; then
-    "${compose[@]}" start artist || status=1
+  if [[ ${#restart_services[@]} -gt 0 ]]; then
+    "${compose[@]}" start "${restart_services[@]}" || status=1
   fi
   exit "$status"
 }
@@ -25,12 +25,18 @@ trap finish EXIT
 trap 'exit 130' INT
 trap 'exit 143' TERM
 
-artist_id=$("${compose[@]}" ps -aq artist)
-[[ -n "$artist_id" ]] || { echo 'Create the artist service before backing it up.' >&2; exit 1; }
-if [[ "$(docker inspect --format '{{.State.Running}}' "$artist_id")" == true ]]; then
-  restart_artist=1
-  "${compose[@]}" stop artist
-fi
+for service in artist-worker artist; do
+  service_id=$("${compose[@]}" ps -aq "$service")
+  if [[ -z "$service_id" ]]; then
+    [[ "$service" == artist-worker ]] && continue
+    echo 'Create the artist service before backing it up.' >&2
+    exit 1
+  fi
+  if [[ "$(docker inspect --format '{{.State.Running}}' "$service_id")" == true ]]; then
+    restart_services+=("$service")
+    "${compose[@]}" stop "$service"
+  fi
+done
 "${compose[@]}" exec -T postgres sh -c \
   'PGPASSWORD="$POSTGRES_PASSWORD" exec pg_dump --format=custom --username="$POSTGRES_USER" --dbname="$POSTGRES_DB"' \
   > "$backup_dir.partial/database.dump"

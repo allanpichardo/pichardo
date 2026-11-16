@@ -34,7 +34,7 @@ compose=(docker compose --project-name "$restore_project" --env-file "$env_file"
   'PGPASSWORD="$POSTGRES_PASSWORD" exec pg_restore --exit-on-error --no-owner --no-acl --username="$POSTGRES_USER" --dbname="$POSTGRES_DB"' \
   < "$backup_dir/database.dump"
 "${compose[@]}" run --rm --no-deps -T --user 0 --entrypoint sh artist -c \
-  'tar --extract --gzip --file - --directory /app/media --no-same-owner && chown -R 1001:1001 /app/media && chmod 750 /app/media' \
+  'stage=$(mktemp -d) && tar --extract --gzip --file - --directory "$stage" --no-same-owner && cp -R "$stage"/. /app/media/ && chown -R 1001:1001 /app/media && chmod 750 /app/media' \
   < "$backup_dir/media.tar.gz"
 if [[ -s "$backup_dir/media-files.sha256" ]]; then
   "${compose[@]}" run --rm --no-deps -T --entrypoint sh artist -c \

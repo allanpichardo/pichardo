@@ -16,7 +16,7 @@ openssl rand -hex 32
 
 Put the first random value in `POSTGRES_PASSWORD` and the second in `PAYLOAD_SECRET`. Use a hex database password because Compose embeds it in the database connection URL. Set `MEDIA_HOST_DIR` to the absolute media path.
 
-Set `ARTIST_IMAGE` to `pichardo-artist:<full Git revision>` and `PROFESSIONAL_IMAGE` to `pichardo-professional:<full Git revision>`. Keep each application image value at its deployed revision when updating the other application. Do not use `latest`.
+Set `ARTIST_IMAGE` to `pichardo-artist:<full Git revision>`, `ARTIST_WORKER_IMAGE` to `pichardo-artist-tools:<same artist revision>`, and `PROFESSIONAL_IMAGE` to `pichardo-professional:<full Git revision>`. Keep each application's image values at its deployed revision when updating the other application. Do not use `latest`.
 
 Validate configuration without printing secrets:
 
@@ -24,7 +24,7 @@ Validate configuration without printing secrets:
 docker compose --env-file infra/.env -f infra/compose.yaml config --quiet
 ```
 
-The three services are `artist`, `professional`, and `postgres`. PostgreSQL has a named volume mounted at `/var/lib/postgresql`. Media has a host bind mount at `/app/media`. Never run `docker compose down --volumes` against production.
+The four services are `artist`, `artist-worker`, `professional`, and `postgres`. PostgreSQL has a named volume mounted at `/var/lib/postgresql`. Both artist services mount the same media root at `/app/media`. This includes private originals and working files as well as published outputs. Never run `docker compose down --volumes` against production.
 
 ## Bootstrap the first administrator
 
@@ -56,7 +56,9 @@ bash scripts/deploy.sh professional "$revision" infra/.env
 
 Run only the command for the application you intend to update. The script requires the environment file's image tag to match the requested revision. It builds locally on the server's architecture.
 
-Artist deployment builds the application and tooling targets, waits for PostgreSQL, runs `payload migrate` through the tooling image, and updates the artist container only after migration succeeds. Application startup does not synchronize the production schema. Professional deployment does not start or migrate PostgreSQL.
+Artist deployment builds the application and tooling targets, waits for PostgreSQL, stops both artist writers, runs `payload migrate` through the tooling image, and updates artist and worker together only after migration succeeds. A migration failure leaves the writers stopped for inspection. Application startup does not synchronize the production schema. Professional deployment does not start or migrate PostgreSQL.
+
+For the first media-pipeline upgrade, add `ARTIST_WORKER_IMAGE` to the environment file before taking the pre-migration backup. The backup script supports a deployment whose worker container does not exist yet. The migration copies existing originals into private storage, verifies their hashes, and imports the current public files with the same IDs and URLs. Allow temporary disk space for these copies. Existing media is re-encoded only when you explicitly queue reprocessing.
 
 The script waits for the selected application's health check. A failed startup leaves the new container available for inspection. Do not assume deployment succeeded because the image built.
 
@@ -78,10 +80,10 @@ The separately managed host Tunnel connects `allanpichardo.com` to `http://local
 Record the previous immutable image tag in the selected variable in `infra/.env`, then recreate only that application:
 
 ```sh
-docker compose --env-file infra/.env -f infra/compose.yaml up -d --no-deps --wait artist
+docker compose --env-file infra/.env -f infra/compose.yaml up -d --no-deps --wait artist artist-worker
 ```
 
-Use `professional` instead to roll back the professional site. Keep the old images until their rollback window closes.
+Set both artist image variables to the same previous revision before rolling back artist. Use `professional` instead to roll back the professional site. Keep the old images until their rollback window closes.
 
 An image rollback does not reverse a database migration. Confirm that the old artist image supports the current schema before starting it. If it does not, use a forward fix or the isolated restore procedure. Never run migration rollback commands automatically.
 
@@ -93,13 +95,15 @@ Choose a protected host directory outside the containers. Run the backup manuall
 bash scripts/backup.sh infra/.env /srv/backups/pichardo
 ```
 
-The script stops a running artist container so its database and media cannot change during backup. It restarts that container on exit, including after failure. The professional site remains available.
+The script stops the worker and artist container so their database and media cannot change during backup. It restarts only those services that were running on entry, including after failure. The professional site remains available.
 
 A completed backup contains a PostgreSQL custom-format logical dump, a compressed media archive, individual media checksums, and `SHA256SUMS`. A failed backup keeps a `.partial` directory. The script does not schedule backups or delete old ones.
 
 Copy completed backups to a separate machine or encrypted off-server destination. Restrict access because the database dump contains authentication records and private administrative data. Also retain the matching application revision and securely preserve the runtime configuration and Payload secret.
 
 A readable archive and matching checksums prove that a backup file is intact. They do not prove the application can use restored data.
+
+Restoration extracts the media archive into temporary container storage, then copies it to the media mount. Allow Docker enough disk space for one extra uncompressed media copy. Every restored file must pass checksum verification before you start the restored application.
 
 ## Test a restore without replacing production
 
@@ -111,14 +115,14 @@ bash scripts/restore.sh infra/.env /srv/backups/pichardo/COMPLETED_BACKUP /srv/p
 
 The script verifies backup checksums, creates a fresh isolated PostgreSQL volume, restores the dump, extracts media into the new directory, and verifies every backed-up media file. It refuses an existing restore directory or database volume. Production application containers and production data remain unchanged.
 
-To inspect restored data, start artist against that isolated project with a different loopback host port. Use the application image matching the backup:
+To inspect restored data, start artist against that isolated project with a different loopback host port. Leave the restored worker stopped until the metadata, file checksums, and private originals have been checked. Use the application image matching the backup:
 
 ```sh
 MEDIA_HOST_DIR=/srv/pichardo-restore-test/media ARTIST_PORT=3100 docker compose --project-name pichardo-restore-test --env-file infra/.env -f infra/compose.yaml up -d --no-deps --wait artist
 curl --fail http://127.0.0.1:3100/health
 ```
 
-Log in at `http://127.0.0.1:3100/admin`, check the expected media records, and retrieve an original and generated variant. The production `ARTIST_URL` can produce production-origin links during inspection. Use a separate protected restore environment file with `ARTIST_URL=http://127.0.0.1:3100` when testing admin navigation.
+Log in at `http://127.0.0.1:3100/admin`, check the expected media records, retrieve published renditions, and verify that anonymous requests cannot retrieve private originals. The production `ARTIST_URL` can produce production-origin links during inspection. Use a separate protected restore environment file with `ARTIST_URL=http://127.0.0.1:3100` when testing admin navigation. After validation, start `artist-worker` with that same restored media mount to recover interrupted jobs.
 
 After verification, explicitly remove only the restore resources you no longer need. A real recovery requires a deliberate cutover to the restored database volume and media directory. Stop artist writes first, preserve the current production data, and verify the restored application before directing the host Tunnel to it.
 
@@ -126,7 +130,7 @@ After verification, explicitly remove only the restore resources you no longer n
 
 Keep Cloudflare's default static-asset caching. Do not enable a rule that caches all HTML or all `/api` responses. Preserve Next.js `Vary` and React Server Component headers.
 
-Next.js supplies immutable cache headers for its versioned `/_next/static/` assets. Payload public originals and generated variants receive a one-hour public cache lifetime. Replacing a media file can leave the old file cached until that lifetime expires. Admin, authentication, health, preview, and dynamic API responses must stay private or uncached.
+Next.js supplies immutable cache headers for its versioned `/_next/static/` assets. Published media renditions and GIF previews receive a one-hour public cache lifetime. New generations have distinct filenames. Deleting a media record denies origin reads, but cached files can remain until their lifetime expires. Admin, authentication, health, content-preview, and dynamic API responses must stay private or uncached.
 
 Inspect origin headers first, then the public hostname:
 
@@ -146,6 +150,7 @@ Inspect the selected service without printing the resolved environment configura
 
 ```sh
 docker compose --env-file infra/.env -f infra/compose.yaml logs --tail=100 artist
+docker compose --env-file infra/.env -f infra/compose.yaml logs --tail=100 artist-worker
 docker compose --env-file infra/.env -f infra/compose.yaml logs --tail=100 postgres
 ```
 
