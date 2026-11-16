@@ -1,0 +1,29 @@
+.VideoPlayer {
+  min-width: 0;
+  width: 100%;
+
+  .skin {
+    --media-accent-color: var(--color-yellow);
+    --media-accent-text-color: var(--color-navy);
+    --media-font-family: var(--font-body), monospace;
+    --media-object-fit: contain;
+    --media-scale-unit: 1rem;
+    --media-controls-before-start: visible;
+
+    width: 100%;
+    color-scheme: dark;
+    border-radius: var(--media-border-radius);
+    overflow: hidden;
+
+    :focus-visible {
+      outline: 0.15rem solid var(--color-yellow);
+      outline-offset: 0.15rem;
+    }
+  }
+
+  .fallback {
+    display: inline-block;
+    margin-block-start: var(--space-2xs);
+    font-size: var(--step--1);
+  }
+}

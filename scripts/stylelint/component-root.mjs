@@ -1,9 +1,12 @@
 import stylelint from 'stylelint';
 import selectorParser from 'postcss-selector-parser';
+import path from 'node:path';
 
 const ruleName = 'artist/component-root';
 const messages = stylelint.utils.ruleMessages(ruleName, {
   root: 'Use one top-level class block and nest all component selectors inside it.',
+  name: (expected) =>
+    `Name the component root class .${expected} to match the component module.`,
   escape:
     'Keep selectors inside the component root. Nest descendants and states without escaping or renaming the ancestor.',
 });
@@ -34,6 +37,10 @@ const componentRoot = (enabled) => (root, result) => {
   const report = (node, message) =>
     stylelint.utils.report({ruleName, result, node, message});
   let component;
+  const filename = root.source?.input.file;
+  const expectedName = filename?.endsWith('.module.scss')
+    ? path.basename(filename, '.module.scss')
+    : undefined;
 
   root.walkAtRules('at-root', (node) => report(node, messages.escape));
   root.walkRules((node) => {
@@ -60,6 +67,14 @@ const componentRoot = (enabled) => (root, result) => {
         report(node, messages.root);
       }
       component ??= node;
+      if (
+        expectedName &&
+        selector.nodes.length === 1 &&
+        selector.first.type === 'class' &&
+        selector.first.value !== expectedName
+      ) {
+        report(node, messages.name(expectedName));
+      }
     }
 
     let escapes = false;

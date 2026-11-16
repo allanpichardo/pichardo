@@ -3,9 +3,24 @@
 The artist frontend loads its foundation in `apps/artist/src/app/(frontend)/layout.tsx`.
 Payload admin and the professional app use their own layouts and styles.
 
+`apps/artist/src/styles/main.scss` is the global Sass entrypoint. It loads these
+partials with `@use`:
+
+- `_utopia.scss` generates fluid type and spacing tokens.
+- `_colors.scss` defines palette and semantic color tokens.
+- `_reset.scss` sets sizing, focus, selection, and media defaults.
+- `_typography.scss` styles text elements and form controls.
+- `_grid.scss` defines grid tokens and layout utilities.
+- `_vars.scss` defines shared component tokens, including `--media-border-radius`.
+
+Reset and typography rules use the `artist-site` body class. Navigation and main
+content spacing stay in `SiteLayout.module.scss`. For a new global concern, add
+a partial in `src/styles/` and load it once from `main.scss`. Keep component
+styles in their colocated modules.
+
 ## Tokens
 
-`apps/artist/src/styles/globals.scss` generates the Utopia scales once. Type
+`apps/artist/src/styles/_utopia.scss` generates the Utopia scales once. Type
 interpolates from a 20px base with a 1.2 ratio at 350px to a 24px base with a 1.25
 ratio at 1600px. The type tokens run from `--step--2` through `--step-5`.
 
@@ -54,17 +69,42 @@ use it. The foundation uses border-box sizing, so this maximum includes padding.
 tracks. A component can choose its own template, including
 `repeat(var(--grid-columns), minmax(0, 1fr))` for the supplied 12-column grid.
 
+Styles across both apps are mobile-first. Base rules define the small-screen
+layout. Ascending minimum-width media queries add larger layouts. Upper-bound
+width queries, including `max-width` and equivalent range syntax, are disallowed.
+Other conditions, such as reduced motion, remain available. Artist Stylelint
+checks width queries in all Sass files, including global foundations.
+
+## Media figures
+
+`MediaFigure` fills the available twelve-column content width below `50rem`.
+At `50rem` and above, it is centered and capped at six columns, including the
+five internal gutters. Images and video frames use `--media-border-radius` from
+`_vars.scss`. Captions and video fallback links sit outside the rounded frame.
+
+The optional `aspectRatio` prop accepts `5:4`, `4:5`, or `fit`. Fixed ratios use
+centered cover cropping. `fit` fills the figure width and preserves the image's
+natural height. Missing or null selections use `fit`, including cover images.
+Videos retain their player proportions regardless of the selection.
+
+Payload exposes the same choices as **Aspect ratio** on media blocks and each
+gallery item. The default is `fit`. The selection belongs to the placement,
+so the same uploaded image can appear with different ratios in different blocks.
+
 ## Write a component module
 
-Apply one root class to the common ancestor. Nest the rules in the same order as
-the DOM hierarchy. In this example, the title belongs inside the header:
+Name the root class after its component, including capitalization. Apply both
+the literal class and its scoped CSS Module class to the root element. For
+example, `MediaFigure` uses `.MediaFigure` and
+``className={`MediaFigure ${styles.MediaFigure}`}``. Nest descendant rules in the
+same order as the DOM hierarchy:
 
 ```tsx
 import styles from './WorkCard.module.scss';
 
 export function WorkCard() {
   return (
-    <article className={styles.card}>
+    <article className={`WorkCard ${styles.WorkCard}`}>
       <header className={styles.header}>
         <h2 className={styles.title}>Work title</h2>
       </header>
@@ -75,7 +115,7 @@ export function WorkCard() {
 ```
 
 ```scss
-.card {
+.WorkCard {
   padding: var(--space-s);
 
   .header {

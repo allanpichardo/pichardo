@@ -44,7 +44,7 @@ Use `pnpm dev:artist` or `pnpm dev:professional` to run one app. The professiona
 
 Use the Media collection in Payload and supply alt text. Images may be JPEG, PNG, or WebP; video sources may be MP4, MOV, or WebM. The limit is 50,000,000 bytes per file. Saving queues background processing. The CMS shows queued, processing, ready, or failed status and provides a retry action. Replacing a file keeps its previous publication available until the new outputs are ready.
 
-Images use WebP quality 90 only when the candidate is smaller. Otherwise the public rendition is a copy of the uploaded image. Responsive widths are 400, 800, and 1600 pixels without enlargement. Videos produce AV1 WebM and H.264 MP4 files fitted within 1920×1080 at no more than 30 fps, plus a WebP poster and sampled looping GIF preview. Public-site playback and hover behavior are left for the design work.
+Images use WebP quality 90 only when the candidate is smaller. Otherwise the public rendition is a copy of the uploaded image. Responsive widths are 400, 800, and 1600 pixels without enlargement. Videos produce AV1 WebM and H.264 MP4 files fitted within 1920×1080 at no more than 30 fps, plus a WebP poster and sampled looping GIF preview. Uploaded videos and YouTube/Vimeo embeds use Video.js 10 with site-styled controls and download or provider links. SoundCloud and Spotify retain their audio embeds.
 
 `MEDIA_DIR` contains separate `originals`, `work`, and `published` directories. Retain the entire directory with the database. Originals remain until their Media record is deleted; replacing a file retains its earlier originals. Retired public generations remain for 24 hours. The empty directory configured for Payload's native file storage is deliberately separate from actual files.
 

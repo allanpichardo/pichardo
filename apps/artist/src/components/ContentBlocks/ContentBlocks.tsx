@@ -1,55 +1,43 @@
 import type {Work} from '../../payload-types';
-import {embedSource} from '../../content/embeds';
-import {validateURL} from '../../content/validation';
 import {FormattedText} from '../FormattedText/FormattedText';
 import {MediaFigure} from '../MediaFigure/MediaFigure';
+import {MediaGallery} from '../MediaGallery/MediaGallery';
+import {EmbeddedMedia} from '../EmbeddedMedia/EmbeddedMedia';
+import styles from './ContentBlocks.module.scss';
 
 export function ContentBlocks({blocks}: {blocks?: Work['content']}) {
-  return blocks?.map((block, index) => {
-    const key = block.id ?? index;
-    switch (block.blockType) {
-      case 'text':
-        return <FormattedText key={key} data={block.text} />;
-      case 'media':
-        return (
-          <MediaFigure key={key} value={block.media} caption={block.caption} />
-        );
-      case 'gallery':
-        return (
-          <div key={key}>
-            {block.items.map((item, itemIndex) => (
+  return (
+    <div className={`ContentBlocks ${styles.ContentBlocks}`}>
+      {blocks?.map((block, index) => {
+        const key = block.id ?? index;
+        switch (block.blockType) {
+          case 'text':
+            return <FormattedText key={key} data={block.text} />;
+          case 'media':
+            return (
               <MediaFigure
-                key={item.id ?? itemIndex}
-                value={item.media}
-                caption={item.caption}
+                key={key}
+                value={block.media}
+                caption={block.caption}
+                aspectRatio={block.aspectRatio}
               />
-            ))}
-          </div>
-        );
-      case 'embed': {
-        const source = embedSource(block.url);
-        return (
-          <figure key={key}>
-            {source ? (
-              <iframe
-                src={source}
-                title={block.caption || 'Embedded media'}
-                loading="lazy"
-                allow="encrypted-media; fullscreen; picture-in-picture"
-                allowFullScreen
-                referrerPolicy="strict-origin-when-cross-origin"
+            );
+          case 'gallery':
+            return <MediaGallery key={key} items={block.items} />;
+          case 'embed':
+            return (
+              <EmbeddedMedia
+                key={key}
+                url={block.url}
+                caption={block.caption}
               />
-            ) : validateURL(block.url) === true ? (
-              <a href={block.url}>{block.caption || block.url}</a>
-            ) : null}
-            {block.caption && <figcaption>{block.caption}</figcaption>}
-          </figure>
-        );
-      }
-      default: {
-        const exhaustive: never = block;
-        return exhaustive;
-      }
-    }
-  });
+            );
+          default: {
+            const exhaustive: never = block;
+            return exhaustive;
+          }
+        }
+      })}
+    </div>
+  );
 }

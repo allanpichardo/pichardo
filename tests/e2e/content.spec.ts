@@ -57,7 +57,9 @@ test('CMS publishing, content blocks, blog URLs, Info metadata, and connected JS
     const html = await response.text();
     expect(response.ok(), html.slice(0, 500)).toBe(true);
     const script =
-      /<script type="application\/ld\+json">([^]*?)<\/script>/.exec(html)?.[1];
+      /<script\b[^>]*\btype="application\/ld\+json"[^>]*>([^]*?)<\/script>/.exec(
+        html,
+      )?.[1];
     expect(script).toBeTruthy();
     return {html, graph: JSON.parse(script || '{}')};
   }
@@ -139,10 +141,21 @@ test('CMS publishing, content blocks, blog URLs, Info metadata, and connected JS
             },
           },
         },
-        {blockType: 'media', media: media.id, caption: 'Single image caption'},
+        {
+          blockType: 'media',
+          media: media.id,
+          caption: 'Single image caption',
+          aspectRatio: '5:4',
+        },
         {
           blockType: 'gallery',
-          items: [{media: media.id, caption: 'Gallery image caption'}],
+          items: [
+            {
+              media: media.id,
+              caption: 'Gallery image caption',
+              aspectRatio: '4:5',
+            },
+          ],
         },
         {
           blockType: 'embed',
@@ -199,10 +212,24 @@ test('CMS publishing, content blocks, blog URLs, Info metadata, and connected JS
     await expect(page.getByText('Rich text body', {exact: true})).toBeVisible();
     await expect(page.getByText('Single image caption')).toBeVisible();
     await expect(page.getByText('Gallery image caption')).toBeVisible();
-    await expect(page.getByTitle('Video embed')).toHaveAttribute(
+    await expect(
+      page.locator('.ContentBlocks > .MediaFigure img'),
+    ).toHaveAttribute('data-aspect-ratio', '5:4');
+    await expect(
+      page.locator('.MediaGallery .MediaFigure img'),
+    ).toHaveAttribute('data-aspect-ratio', '4:5');
+    const videoEmbed = page.getByRole('region', {
+      name: 'Video embed',
+      exact: true,
+    });
+    await expect(videoEmbed.locator('[data-theme="neutral"]')).toBeVisible();
+    await expect(videoEmbed.locator('iframe')).toHaveAttribute(
       'src',
-      'https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ',
+      /^https:\/\/www\.youtube-nocookie\.com\/embed\/dQw4w9WgXcQ\?/,
     );
+    await expect(
+      videoEmbed.getByRole('button', {name: 'Play', exact: true}).last(),
+    ).toBeVisible();
     await expect(
       page.getByRole('link', {name: 'External project'}),
     ).toHaveAttribute('href', 'https://example.com/project');

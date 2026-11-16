@@ -1,0 +1,16 @@
+:root {
+  --color-blue: #4b91dc;
+  --color-purple: #840277;
+  --color-yellow: #f2cf1d;
+  --color-pink: #eb2f86;
+  --color-navy: #211959;
+  --color-white: #fff;
+
+  --color-background: var(--color-white);
+  --color-text: var(--color-navy);
+  --color-link: var(--color-purple);
+  --color-link-hover: var(--color-navy);
+  --color-focus: var(--color-purple);
+  --color-selection-background: var(--color-yellow);
+  --color-selection-text: var(--color-navy);
+}

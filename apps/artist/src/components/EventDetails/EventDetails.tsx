@@ -1,5 +1,6 @@
 import type {Event} from '../../payload-types';
 import {FormattedText} from '../FormattedText/FormattedText';
+import styles from './EventDetails.module.scss';
 
 export function EventDetails({event}: {event: Event}) {
   const allDay = event.timingMode === 'allDay';
@@ -19,7 +20,7 @@ export function EventDetails({event}: {event: Event}) {
     .filter(Boolean)
     .join(', ');
   return (
-    <>
+    <div className={`EventDetails ${styles.EventDetails}`}>
       {start && (
         <p>
           <time dateTime={start}>{format(start)}</time>
@@ -41,6 +42,6 @@ export function EventDetails({event}: {event: Event}) {
           <a href={event.eventURL}>Event website</a>
         </p>
       )}
-    </>
+    </div>
   );
 }

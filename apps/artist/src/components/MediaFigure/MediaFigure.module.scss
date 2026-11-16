@@ -1,1 +1,30 @@
-// Inherits shared styles; no component-specific rules.
+.MediaFigure {
+  min-width: 0;
+  width: 100%;
+  margin-inline: auto;
+
+  img {
+    display: block;
+    width: 100%;
+    height: auto;
+    border-radius: var(--media-border-radius);
+
+    &[data-aspect-ratio='5:4'],
+    &[data-aspect-ratio='4:5'] {
+      object-fit: cover;
+      object-position: center;
+    }
+
+    &[data-aspect-ratio='5:4'] {
+      aspect-ratio: 5 / 4;
+    }
+
+    &[data-aspect-ratio='4:5'] {
+      aspect-ratio: 4 / 5;
+    }
+  }
+
+  @media (min-width: 50rem) {
+    max-width: calc((100% - var(--grid-gutter)) * 0.66);
+  }
+}

@@ -252,10 +252,10 @@ describe('external embeds', () => {
       'https://open.spotify.com/embed/track/abc123',
     ],
   ])('normalizes %s to a trusted embed source', (url, expected) =>
-    expect(embedSource(url)).toBe(expected),
+    expect(embedSource(url)?.src).toBe(expected),
   );
   it('supports SoundCloud and rejects unsupported or misleading hosts', () => {
-    expect(embedSource('https://soundcloud.com/artist/track')).toContain(
+    expect(embedSource('https://soundcloud.com/artist/track')?.src).toContain(
       'https://w.soundcloud.com/player/',
     );
     for (const url of [

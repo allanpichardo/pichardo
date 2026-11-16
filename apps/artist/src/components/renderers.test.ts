@@ -44,6 +44,50 @@ it('renders public images and video sources, and omits unresolved media', () => 
   expect(html).toContain('src="/video.webm"');
   expect(html).toContain('src="/video.mp4"');
   expect(html).toContain('poster="/poster.webp"');
+  expect(html).toContain('data-theme="neutral"');
+  expect(html).toContain('aria-label="Video"');
+  expect(html).toContain('Download video');
+  expect(html).not.toContain('<video controls');
+});
+
+it('uses Video.js for video embeds and retains audio provider iframes and captions', () => {
+  const blocks: Work['content'] = [
+    {blockType: 'embed', url: 'https://youtu.be/aqz-KE-bpKQ', caption: 'Film'},
+    {blockType: 'embed', url: 'https://vimeo.com/123456'},
+    {blockType: 'embed', url: 'https://soundcloud.com/artist/track'},
+    {blockType: 'embed', url: 'https://open.spotify.com/track/abc123'},
+  ];
+  const html = renderToStaticMarkup(createElement(ContentBlocks, {blocks}));
+  expect(html).toContain('data-video-provider="youtube"');
+  expect(html).toContain('data-video-provider="vimeo"');
+  expect(html.match(/data-theme="neutral"/g)).toHaveLength(2);
+  expect(html).toContain('<figcaption>Film</figcaption>');
+  expect(html).toContain('Watch on YouTube');
+  expect(html).toContain('Watch on Vimeo');
+  expect(html).toContain('https://w.soundcloud.com/player/');
+  expect(html).toContain('https://open.spotify.com/embed/track/abc123');
+});
+
+it('defaults missing and null image ratios to fit and forwards block and gallery choices', () => {
+  for (const aspectRatio of [undefined, null, 'fit', '5:4', '4:5'] as const) {
+    const html = renderToStaticMarkup(
+      createElement(MediaFigure, {value: image, aspectRatio}),
+    );
+    expect(html).toContain(`data-aspect-ratio="${aspectRatio ?? 'fit'}"`);
+  }
+  const blocks: Work['content'] = [
+    {blockType: 'media', media: image, aspectRatio: '5:4'},
+    {
+      blockType: 'gallery',
+      items: [{media: image, aspectRatio: '4:5'}, {media: image}],
+    },
+  ];
+  const html = renderToStaticMarkup(createElement(ContentBlocks, {blocks}));
+  expect(html.match(/data-aspect-ratio="[^"]+"/g)).toEqual([
+    'data-aspect-ratio="5:4"',
+    'data-aspect-ratio="4:5"',
+    'data-aspect-ratio="fit"',
+  ]);
 });
 
 it('preserves gallery ordering and renders safe link fallbacks for unsupported embeds', () => {

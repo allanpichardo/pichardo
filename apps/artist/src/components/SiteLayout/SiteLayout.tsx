@@ -10,8 +10,8 @@ export function SiteLayout({
   className: string;
 }) {
   return (
-    <html lang="en" className={className}>
-      <body className={styles.site}>
+    <html lang="en" className={`SiteLayout ${styles.SiteLayout} ${className}`}>
+      <body className="artist-site">
         <nav className="u-container" aria-label="Main navigation">
           <Link href="/">Home</Link> <Link href="/blog">Blog</Link>
         </nav>

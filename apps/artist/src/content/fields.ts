@@ -86,6 +86,20 @@ export function seoField(): Field {
   };
 }
 
+function aspectRatioField(): Field {
+  return {
+    name: 'aspectRatio',
+    label: 'Aspect ratio',
+    type: 'select',
+    defaultValue: 'fit',
+    options: ['5:4', '4:5', 'fit'],
+    admin: {
+      description:
+        'Images only. 5:4 and 4:5 crop to fill the frame. fit preserves the natural image proportions. Videos keep their own proportions.',
+    },
+  };
+}
+
 export const contentBlocks: Block[] = [
   {
     slug: 'text',
@@ -98,6 +112,7 @@ export const contentBlocks: Block[] = [
     fields: [
       {name: 'media', type: 'upload', relationTo: 'media', required: true},
       {name: 'caption', type: 'text'},
+      aspectRatioField(),
     ],
   },
   {
@@ -112,6 +127,7 @@ export const contentBlocks: Block[] = [
         fields: [
           {name: 'media', type: 'upload', relationTo: 'media', required: true},
           {name: 'caption', type: 'text'},
+          aspectRatioField(),
         ],
       },
     ],

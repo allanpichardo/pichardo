@@ -44,6 +44,96 @@ afterAll(async () => {
 });
 
 describe('artist content model', () => {
+  it('persists image ratios and fit defaults in content, galleries, and draft versions', async () => {
+    const image = await readFile(
+      path.resolve('../../tests/fixtures/media.png'),
+    );
+    const uploaded = await payload.create({
+      collection: 'media',
+      data: {alt: 'Ratio options'},
+      file: {
+        data: image,
+        name: 'ratio.png',
+        mimetype: 'image/png',
+        size: image.length,
+      },
+    });
+    cleanup.push(() => payload.delete({collection: 'media', id: uploaded.id}));
+
+    for (const collection of ['works', 'posts', 'pages'] as const) {
+      const doc = await payload.create({
+        collection,
+        user,
+        overrideAccess: false,
+        draft: true,
+        data: {
+          title: `Ratios ${collection} ${suffix}`,
+          slug: `ratios-${collection}-${suffix}`,
+          content: [
+            {blockType: 'media', media: uploaded.id, aspectRatio: '5:4'},
+            {blockType: 'media', media: uploaded.id},
+            {
+              blockType: 'gallery',
+              items: [
+                {media: uploaded.id, aspectRatio: '4:5'},
+                {media: uploaded.id, aspectRatio: 'fit'},
+                {media: uploaded.id},
+              ],
+            },
+          ],
+        },
+      });
+      cleanup.push(() => payload.delete({collection, id: doc.id}));
+      await payload.update({
+        collection,
+        id: doc.id,
+        user,
+        overrideAccess: false,
+        data: {_status: 'published'},
+      });
+      const saved = await payload.findByID({collection, id: doc.id});
+      expect(saved.content).toMatchObject([
+        {blockType: 'media', aspectRatio: '5:4'},
+        {blockType: 'media', aspectRatio: 'fit'},
+        {
+          blockType: 'gallery',
+          items: [
+            {aspectRatio: '4:5'},
+            {aspectRatio: 'fit'},
+            {aspectRatio: 'fit'},
+          ],
+        },
+      ]);
+      await payload.update({
+        collection,
+        id: doc.id,
+        draft: true,
+        user,
+        overrideAccess: false,
+        data: {
+          content: [
+            {blockType: 'media', media: uploaded.id, aspectRatio: '4:5'},
+            {
+              blockType: 'gallery',
+              items: [{media: uploaded.id, aspectRatio: '5:4'}],
+            },
+          ],
+        },
+      });
+      const draft = await payload.findByID({
+        collection,
+        id: doc.id,
+        draft: true,
+      });
+      expect(draft.content).toMatchObject([
+        {blockType: 'media', aspectRatio: '4:5'},
+        {blockType: 'gallery', items: [{aspectRatio: '5:4'}]},
+      ]);
+      const published = await payload.findByID({collection, id: doc.id});
+      expect(published.content?.[0]).toMatchObject({aspectRatio: '5:4'});
+    }
+  });
+
   it('keeps unpublished work and newer draft edits private, including version reads', async () => {
     const doc = await payload.create({
       collection: 'works',

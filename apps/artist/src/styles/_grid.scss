@@ -1,0 +1,16 @@
+:root {
+  --grid-max-width: 93rem;
+  --grid-gutter: var(--space-s-l, clamp(1.25rem, 0.7118rem + 2.4605vw, 3rem));
+  --grid-columns: 12;
+}
+
+.u-container {
+  max-width: var(--grid-max-width);
+  padding-inline: var(--grid-gutter);
+  margin-inline: auto;
+}
+
+.u-grid {
+  display: grid;
+  gap: var(--grid-gutter);
+}

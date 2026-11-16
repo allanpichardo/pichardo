@@ -1,4 +1,4 @@
-import type {Event, Info, Media, Work} from '../../../payload-types';
+import type {Event, Info, Media, Page, Post, Work} from '../../payload-types';
 
 const dates = {
   createdAt: '2026-01-01T00:00:00Z',
@@ -190,3 +190,61 @@ export const allDayEvent = {
   venue: 'Sample gallery',
   description: sampleText,
 } satisfies Event;
+
+export const sampleWork = {
+  id: 1,
+  ...dates,
+  title: 'Field notes',
+  slug: 'sample-field-notes',
+  summary: 'A sample description of a generative installation.',
+  category: {id: 1, name: 'Installation', slug: 'installation', ...dates},
+  year: 2026,
+  medium: 'Software, projection, sound',
+  dimensions: 'Variable',
+  schemaTypes: ['CreativeWork'],
+  tags: [
+    {id: 1, name: 'Generative systems', slug: 'generative-systems', ...dates},
+    {id: 2, name: 'Sound', slug: 'sound', ...dates},
+  ],
+  content: [{blockType: 'text', text: sampleText}],
+} satisfies Work;
+
+export const samplePost = {
+  id: 1,
+  ...dates,
+  title: 'Notes on repetition',
+  slug: 'sample-notes-on-repetition',
+  summary: 'A sample studio journal entry.',
+  publishedAt: '2026-11-15T00:00:00Z',
+  tags: [
+    {id: 1, name: 'Process', slug: 'process', ...dates},
+    {id: 2, name: 'Studio notes', slug: 'studio-notes', ...dates},
+  ],
+  content: [{blockType: 'text', text: sampleText}],
+} satisfies Post;
+
+export const samplePage = {
+  id: 1,
+  ...dates,
+  title: 'About the studio',
+  slug: 'sample-about-the-studio',
+  summary: 'An example of a general content page.',
+  schemaType: 'AboutPage',
+  content: [{blockType: 'text', text: sampleText}],
+} satisfies Page;
+
+export const mediaBlocks = [
+  {blockType: 'text', text: sampleText},
+  {
+    blockType: 'media',
+    media: sampleImage,
+    caption: 'Shape and field / Image block with caption.',
+  },
+  {
+    blockType: 'media',
+    media: sampleVideo,
+    aspectRatio: '4:5',
+    caption:
+      'Motion study / A silent three-second local video. Press play to preview.',
+  },
+] satisfies NonNullable<Work['content']>;

@@ -1,7 +1,11 @@
 const config = {
   customSyntax: 'postcss-scss',
-  plugins: ['./scripts/stylelint/component-root.mjs'],
+  plugins: [
+    './scripts/stylelint/component-root.mjs',
+    './scripts/stylelint/mobile-first.mjs',
+  ],
   rules: {
+    'artist/mobile-first': true,
     'block-no-empty': true,
     'color-no-invalid-hex': true,
     'declaration-block-no-duplicate-properties': true,

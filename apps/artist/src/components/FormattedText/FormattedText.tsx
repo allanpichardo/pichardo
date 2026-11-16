@@ -2,6 +2,7 @@ import {RichText} from '@payloadcms/richtext-lexical/react';
 import type {JSXConvertersFunction} from '@payloadcms/richtext-lexical/react';
 import type {Info} from '../../payload-types';
 import {validateURL} from '../../content/validation';
+import styles from './FormattedText.module.scss';
 
 const converters: JSXConvertersFunction = ({defaultConverters}) => ({
   ...defaultConverters,
@@ -36,5 +37,11 @@ const converters: JSXConvertersFunction = ({defaultConverters}) => ({
 });
 
 export function FormattedText({data}: {data?: Info['biography']}) {
-  return data ? <RichText data={data} converters={converters} /> : null;
+  return data ? (
+    <RichText
+      className={`FormattedText ${styles.FormattedText}`}
+      data={data}
+      converters={converters}
+    />
+  ) : null;
 }

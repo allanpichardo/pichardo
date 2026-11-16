@@ -4,31 +4,31 @@ import stylelint from 'stylelint';
 import config from '../../stylelint.config.mjs';
 
 const valid = [
-  '.card { color: red; .header { h2 { color: blue; } } }',
-  '.card { &:hover { color: red; } &.active { color: blue; } }',
-  '.card { @media (width > 40rem) { .header { color: red; } } }',
-  '.card { @supports (display: grid) { display: grid; } }',
-  '.card { .item { & + .item { margin-top: 1rem; } } }',
-  '.card { & > .item + .item { margin-top: 1rem; } }',
-  '@use "tokens"; .card { color: red; }',
-  '.card { animation: pulse 1s; } @keyframes pulse { to { opacity: 0; } }',
+  '.Card { color: red; .header { h2 { color: blue; } } }',
+  '.Card { &:hover { color: red; } &.active { color: blue; } }',
+  '.Card { @media (width > 40rem) { .header { color: red; } } }',
+  '.Card { @supports (display: grid) { display: grid; } }',
+  '.Card { .item { & + .item { margin-top: 1rem; } } }',
+  '.Card { & > .item + .item { margin-top: 1rem; } }',
+  '@use "tokens"; .Card { color: red; }',
+  '.Card { animation: pulse 1s; } @keyframes pulse { to { opacity: 0; } }',
 ];
 
 const invalid = [
-  '.card { color: red; } .title { color: blue; }',
-  '.card { color: red; } .card .title { color: blue; }',
+  '.Card { color: red; } .title { color: blue; }',
+  '.Card { color: red; } .Card .title { color: blue; }',
   'h1 { color: red; }',
-  '.card .title { color: red; }',
-  '.card, .panel { color: red; }',
-  '@media (width > 40rem) { .card { color: red; } }',
-  '.card { color: red; } @media (width > 40rem) { .card { color: blue; } }',
-  '.card { @at-root .title { color: red; } }',
-  '.card { :global(body) { color: red; } }',
-  '.card { &__title { color: red; } }',
-  '.card { .outside & { color: red; } }',
-  '.card { &:hover + .outside { color: red; } }',
-  '.card { & ~ .outside { color: red; } }',
-  '.card { :not(&) { color: red; } }',
+  '.Card .title { color: red; }',
+  '.Card, .panel { color: red; }',
+  '@media (width > 40rem) { .Card { color: red; } }',
+  '.Card { color: red; } @media (width > 40rem) { .Card { color: blue; } }',
+  '.Card { @at-root .title { color: red; } }',
+  '.Card { :global(body) { color: red; } }',
+  '.Card { &__title { color: red; } }',
+  '.Card { .outside & { color: red; } }',
+  '.Card { &:hover + .outside { color: red; } }',
+  '.Card { & ~ .outside { color: red; } }',
+  '.Card { :not(&) { color: red; } }',
 ];
 
 async function lint(
@@ -64,11 +64,27 @@ for (const code of invalid) {
 test('exempts global foundations from the component-root rule', async () => {
   const result = await lint(
     ':root { --color-text: navy; } .u-container { margin-inline: auto; }',
-    'apps/artist/src/styles/globals.scss',
+    'apps/artist/src/styles/main.scss',
   );
   assert.equal(
     result.errored,
     false,
     JSON.stringify(result.results[0].warnings),
   );
+});
+
+test('requires the root class to match the component module name', async () => {
+  const filename =
+    'apps/artist/src/components/MediaFigure/MediaFigure.module.scss';
+  const wrong = await lint('.figure { min-width: 0; }', filename);
+  assert.equal(wrong.errored, true);
+  assert.ok(
+    wrong.results[0].warnings.some(
+      (warning) =>
+        warning.rule === 'artist/component-root' &&
+        warning.text.includes('.MediaFigure'),
+    ),
+  );
+  const correct = await lint('.MediaFigure { min-width: 0; }', filename);
+  assert.equal(correct.errored, false);
 });

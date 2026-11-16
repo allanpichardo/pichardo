@@ -563,6 +563,10 @@ export interface TextBlock {
 export interface MediaBlock {
   media: number | Media;
   caption?: string | null;
+  /**
+   * Images only. 5:4 and 4:5 crop to fill the frame. fit preserves the natural image proportions. Videos keep their own proportions.
+   */
+  aspectRatio?: ('5:4' | '4:5' | 'fit') | null;
   id?: string | null;
   blockName?: string | null;
   blockType: 'media';
@@ -575,6 +579,10 @@ export interface GalleryBlock {
   items: {
     media: number | Media;
     caption?: string | null;
+    /**
+     * Images only. 5:4 and 4:5 crop to fill the frame. fit preserves the natural image proportions. Videos keep their own proportions.
+     */
+    aspectRatio?: ('5:4' | '4:5' | 'fit') | null;
     id?: string | null;
   }[];
   id?: string | null;
@@ -1156,6 +1164,7 @@ export interface TextBlockSelect<T extends boolean = true> {
 export interface MediaBlockSelect<T extends boolean = true> {
   media?: T;
   caption?: T;
+  aspectRatio?: T;
   id?: T;
   blockName?: T;
 }
@@ -1169,6 +1178,7 @@ export interface GalleryBlockSelect<T extends boolean = true> {
     | {
         media?: T;
         caption?: T;
+        aspectRatio?: T;
         id?: T;
       };
   id?: T;

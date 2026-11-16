@@ -1,6 +1,7 @@
 'use client';
 import {useDocumentInfo} from '@payloadcms/ui';
 import {useState} from 'react';
+import styles from './ReprocessMedia.module.scss';
 
 export function ReprocessMedia() {
   const {id} = useDocumentInfo();
@@ -8,7 +9,7 @@ export function ReprocessMedia() {
   const [busy, setBusy] = useState(false);
   if (!id) return null;
   return (
-    <div>
+    <div className={`ReprocessMedia ${styles.ReprocessMedia}`}>
       <button
         type="button"
         disabled={busy}
