@@ -154,7 +154,9 @@ export function createMediaCollection(mediaDir: string): CollectionConfig {
         name: 'reprocess',
         type: 'ui',
         admin: {
-          components: {Field: '/components/ReprocessMedia#ReprocessMedia'},
+          components: {
+            Field: '/components/ReprocessMedia/ReprocessMedia#ReprocessMedia',
+          },
         },
       },
     ],

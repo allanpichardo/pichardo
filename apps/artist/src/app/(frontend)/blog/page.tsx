@@ -2,7 +2,7 @@ import Link from 'next/link';
 import {getPublished} from '../../../content/queries';
 import {contentPath} from '../../../content/urls';
 import {pageSEO} from '../../../seo/page-seo';
-import {SEO} from '../../../components/SEO';
+import {SEO} from '../../../components/SEO/SEO';
 
 export async function generateMetadata() {
   return (await pageSEO({kind: 'blog', posts: await getPublished('posts')}))

@@ -2,8 +2,8 @@ import Link from 'next/link';
 import {getInfo, getPublished} from '../../content/queries';
 import {contentPath} from '../../content/urls';
 import {pageSEO} from '../../seo/page-seo';
-import {SEO} from '../../components/SEO';
-import {FormattedText} from '../../components/ContentBlocks';
+import {SEO} from '../../components/SEO/SEO';
+import {FormattedText} from '../../components/FormattedText/FormattedText';
 
 export async function generateMetadata() {
   return (await pageSEO({kind: 'home'})).metadata;

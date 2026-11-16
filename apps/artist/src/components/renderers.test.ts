@@ -1,7 +1,9 @@
 import {createElement} from 'react';
 import {renderToStaticMarkup} from 'react-dom/server';
 import {expect, it} from 'vitest';
-import {ContentBlocks, FormattedText, MediaFigure} from './ContentBlocks';
+import {ContentBlocks} from './ContentBlocks/ContentBlocks';
+import {FormattedText} from './FormattedText/FormattedText';
+import {MediaFigure} from './MediaFigure/MediaFigure';
 import type {Media, Work} from '../payload-types';
 
 const dates = {
