@@ -2,6 +2,11 @@ import {defineConfig, globalIgnores} from 'eslint/config';
 import nextVitals from 'eslint-config-next/core-web-vitals';
 import tseslint from 'typescript-eslint';
 import prettier from 'eslint-config-prettier/flat';
+import {createRequire} from 'node:module';
+
+const requireFromArtist = createRequire(
+  new URL('./apps/artist/package.json', import.meta.url),
+);
 
 export default defineConfig([
   globalIgnores([
@@ -18,6 +23,11 @@ export default defineConfig([
   ...nextVitals,
   {
     settings: {next: {rootDir: ['apps/artist', 'apps/professional']}},
+    languageOptions: {
+      parserOptions: {
+        babelOptions: {presets: [requireFromArtist.resolve('next/babel')]},
+      },
+    },
   },
   {
     files: ['apps/**/*.ts', 'apps/**/*.tsx'],

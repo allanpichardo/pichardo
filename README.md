@@ -7,7 +7,7 @@ Two independently deployable Next.js applications in a pnpm workspace:
 | Artist, allanpichardo.com  | Payload and PostgreSQL | http://localhost:3000 |
 | Professional, pichardo.dev | Local MDX              | http://localhost:3001 |
 
-This foundation contains minimal public pages, CMS administration, and operating infrastructure. Visual design and portfolio content come later.
+The artist application includes CMS content editing, basic public pages, and structured SEO metadata. Visual design and portfolio content come later.
 
 ## Start development
 
@@ -91,6 +91,20 @@ pnpm test:containers
 This separate test requires the Chromium installation above. It builds all image targets and starts a uniquely named disposable Compose stack. It runs the browser suite against the standalone containers and verifies HTTP, authentication, uploads, loopback bindings, database isolation, container recreation, professional independence, and a database plus media backup restoration. It deletes only its own Compose containers and volumes. Logs are in `test-results/containers`. Temporary backup artifacts remain at the printed path for inspection. Test ports default to 31300 and 31301 and can be changed with `TEST_ARTIST_PORT` and `TEST_PROFESSIONAL_PORT`.
 
 GitHub Actions is configured to run code checks with disposable PostgreSQL and production-container verification in two jobs. It uses generated test credentials, not production secrets.
+
+## Edit artist content
+
+Payload's Content group contains Work, Events, Posts, and Pages. Save drafts while editing, then publish to make content public. Editing an already published document as a draft keeps its published revision visible. Taxonomies have separate Work category, Work tag, Event type, and Post tag collections. Each work has at most one category. Work and Post tags are independent.
+
+Work, Post, and Page content uses repeatable text, media, gallery, and embed blocks. Embeds support YouTube, Vimeo, SoundCloud, and Spotify URLs. Other web URLs render as links. Events support all-day ranges with inclusive end dates, or timed ranges with an explicit IANA timezone. Enter timed dates using the admin date picker's timezone, then set the event timezone used for public display.
+
+Info holds the artist name, site title, description, biography, default social image, favicon, and social profiles. Saving Info changes the public site immediately. Its image fields use the existing image uploads, without adding ICO or SVG support. Uploads become publicly usable after the media worker finishes processing them.
+
+Published work appears at `/work/[slug]`, events at `/events/[slug]`, posts at `/blog/[slug]`, and general pages at `/[slug]`. The `/blog` listing shows published posts newest first. System paths and content prefixes are reserved against Page slug collisions.
+
+Each content entry has optional SEO title, description, and social-image overrides. Metadata falls back to its content fields, then Info. Work supports multiple Schema.org types, defaulting to CreativeWork. Pages offer all WebPage subtypes, defaulting to WebPage. Events use Event and posts use Article. Type selectors affect JSON-LD classification; they do not add type-specific editing forms. The sitemap includes published content only.
+
+Schema type choices come from the committed Schema.org 30.1 catalog. Run `pnpm schema:generate` to regenerate it from the official release definitions. This command needs network access; the CMS and public site do not fetch the vocabulary at runtime. Review catalog changes and generate a migration if select options change.
 
 ## Change the CMS schema
 

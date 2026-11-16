@@ -8,6 +8,18 @@ import {createMediaCollection} from './collections/Media';
 import {MediaGenerations} from './collections/MediaGenerations';
 import {mediaTask} from './media-processing/task';
 import {getEnvironment} from './environment';
+import {lexicalEditor, LinkFeature} from '@payloadcms/richtext-lexical';
+import {Works} from './collections/Works';
+import {Events} from './collections/Events';
+import {Posts} from './collections/Posts';
+import {Pages} from './collections/Pages';
+import {
+  WorkCategories,
+  WorkTags,
+  EventTypes,
+  PostTags,
+} from './collections/Taxonomies';
+import {Info} from './globals/Info';
 
 const env = getEnvironment(process.env);
 const dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -23,7 +35,24 @@ export default buildConfig({
     {...Users, auth: {cookies: {secure: env.secureCookies, sameSite: 'Lax'}}},
     createMediaCollection(env.mediaDir),
     MediaGenerations,
+    Works,
+    Events,
+    Posts,
+    Pages,
+    WorkCategories,
+    WorkTags,
+    EventTypes,
+    PostTags,
   ],
+  globals: [Info],
+  editor: lexicalEditor({
+    features: ({defaultFeatures}) => [
+      ...defaultFeatures.filter(
+        (feature) => !['upload', 'relationship', 'link'].includes(feature.key),
+      ),
+      LinkFeature({enabledCollections: []}),
+    ],
+  }),
   db: postgresAdapter({
     pool: {connectionString: env.databaseUrl},
     migrationDir: path.resolve(dirname, 'migrations'),

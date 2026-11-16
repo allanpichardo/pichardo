@@ -70,6 +70,14 @@ export interface Config {
     users: User;
     media: Media;
     'media-generations': MediaGeneration;
+    works: Work;
+    events: Event;
+    posts: Post;
+    pages: Page;
+    'work-categories': WorkCategory;
+    'work-tags': WorkTag;
+    'event-types': EventType;
+    'post-tags': PostTag;
     'payload-kv': PayloadKv;
     'payload-jobs': PayloadJob;
     'payload-locked-documents': PayloadLockedDocument;
@@ -81,6 +89,14 @@ export interface Config {
     users: UsersSelect<false> | UsersSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
     'media-generations': MediaGenerationsSelect<false> | MediaGenerationsSelect<true>;
+    works: WorksSelect<false> | WorksSelect<true>;
+    events: EventsSelect<false> | EventsSelect<true>;
+    posts: PostsSelect<false> | PostsSelect<true>;
+    pages: PagesSelect<false> | PagesSelect<true>;
+    'work-categories': WorkCategoriesSelect<false> | WorkCategoriesSelect<true>;
+    'work-tags': WorkTagsSelect<false> | WorkTagsSelect<true>;
+    'event-types': EventTypesSelect<false> | EventTypesSelect<true>;
+    'post-tags': PostTagsSelect<false> | PostTagsSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-jobs': PayloadJobsSelect<false> | PayloadJobsSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
@@ -91,8 +107,12 @@ export interface Config {
     defaultIDType: number;
   };
   fallbackLocale: null;
-  globals: {};
-  globalsSelect: {};
+  globals: {
+    info: Info;
+  };
+  globalsSelect: {
+    info: InfoSelect<false> | InfoSelect<true>;
+  };
   locale: null;
   widgets: {
     collections: CollectionsWidget;
@@ -268,6 +288,473 @@ export interface MediaGeneration {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "works".
+ */
+export interface Work {
+  id: number;
+  title: string;
+  /**
+   * When enabled, the slug will auto-generate from the title field on save and autosave.
+   */
+  generateSlug?: boolean | null;
+  slug: string;
+  summary?: string | null;
+  coverImage?: (number | null) | Media;
+  category?: (number | null) | WorkCategory;
+  tags?: (number | WorkTag)[] | null;
+  year?: number | null;
+  medium?: string | null;
+  dimensions?: string | null;
+  content?: (TextBlock | MediaBlock | GalleryBlock | EmbedBlock)[] | null;
+  seo?: {
+    title?: string | null;
+    description?: string | null;
+    socialImage?: (number | null) | Media;
+  };
+  /**
+   * Choose all types that describe this work.
+   */
+  schemaTypes: (
+    | '3DModel'
+    | 'AboutPage'
+    | 'AdvertiserContentArticle'
+    | 'AmpStory'
+    | 'AnalysisNewsArticle'
+    | 'Answer'
+    | 'APIReference'
+    | 'ArchiveComponent'
+    | 'Article'
+    | 'AskPublicNewsArticle'
+    | 'Atlas'
+    | 'Audiobook'
+    | 'AudioObject'
+    | 'AudioObjectSnapshot'
+    | 'BackgroundNewsArticle'
+    | 'Barcode'
+    | 'Blog'
+    | 'BlogPosting'
+    | 'Book'
+    | 'BookSeries'
+    | 'CategoryCodeSet'
+    | 'Certification'
+    | 'Chapter'
+    | 'CheckoutPage'
+    | 'Claim'
+    | 'ClaimReview'
+    | 'Clip'
+    | 'Code'
+    | 'Collection'
+    | 'CollectionPage'
+    | 'ComicCoverArt'
+    | 'ComicIssue'
+    | 'ComicSeries'
+    | 'ComicStory'
+    | 'Comment'
+    | 'CompleteDataFeed'
+    | 'ContactPage'
+    | 'Conversation'
+    | 'CorrectionComment'
+    | 'Course'
+    | 'CoverArt'
+    | 'CreativeWork'
+    | 'CreativeWorkSeason'
+    | 'CreativeWorkSeries'
+    | 'Credential'
+    | 'CriticReview'
+    | 'DataCatalog'
+    | 'DataDownload'
+    | 'DataFeed'
+    | 'Dataset'
+    | 'DeclarationOfConformity'
+    | 'DefinedTermSet'
+    | 'Diet'
+    | 'DigitalDocument'
+    | 'DigitalProductPassport'
+    | 'DiscussionForumPosting'
+    | 'Drawing'
+    | 'EducationalOccupationalCredential'
+    | 'EmailMessage'
+    | 'EmployerReview'
+    | 'EnvironmentalProductDeclaration'
+    | 'Episode'
+    | 'ExercisePlan'
+    | 'FAQPage'
+    | 'Game'
+    | 'Guide'
+    | 'HealthTopicContent'
+    | 'HowTo'
+    | 'HowToDirection'
+    | 'HowToSection'
+    | 'HowToStep'
+    | 'HowToTip'
+    | 'HyperToc'
+    | 'HyperTocEntry'
+    | 'ImageGallery'
+    | 'ImageObject'
+    | 'ImageObjectSnapshot'
+    | 'ItemPage'
+    | 'LearningResource'
+    | 'Legislation'
+    | 'LegislationObject'
+    | 'LiveBlogPosting'
+    | 'Manuscript'
+    | 'Map'
+    | 'MathSolver'
+    | 'MediaGallery'
+    | 'MediaObject'
+    | 'MediaReview'
+    | 'MediaReviewItem'
+    | 'MedicalScholarlyArticle'
+    | 'MedicalWebPage'
+    | 'Menu'
+    | 'MenuSection'
+    | 'Message'
+    | 'MobileApplication'
+    | 'Movie'
+    | 'MovieClip'
+    | 'MovieSeries'
+    | 'MusicAlbum'
+    | 'MusicComposition'
+    | 'MusicPlaylist'
+    | 'MusicRecording'
+    | 'MusicRelease'
+    | 'MusicVideoObject'
+    | 'NewsArticle'
+    | 'Newspaper'
+    | 'NoteDigitalDocument'
+    | 'OperatingSystem'
+    | 'OpinionNewsArticle'
+    | 'Painting'
+    | 'Periodical'
+    | 'Photograph'
+    | 'Play'
+    | 'PodcastEpisode'
+    | 'PodcastSeason'
+    | 'PodcastSeries'
+    | 'Poster'
+    | 'PresentationDigitalDocument'
+    | 'ProductCollection'
+    | 'ProfilePage'
+    | 'PublicationIssue'
+    | 'PublicationVolume'
+    | 'QAPage'
+    | 'Question'
+    | 'Quiz'
+    | 'Quotation'
+    | 'RadioClip'
+    | 'RadioEpisode'
+    | 'RadioSeason'
+    | 'RadioSeries'
+    | 'RealEstateListing'
+    | 'Recipe'
+    | 'Recommendation'
+    | 'Report'
+    | 'ReportageNewsArticle'
+    | 'Review'
+    | 'ReviewNewsArticle'
+    | 'RuntimePlatform'
+    | 'SatiricalArticle'
+    | 'ScholarlyArticle'
+    | 'Sculpture'
+    | 'SearchResultsPage'
+    | 'Season'
+    | 'SequentialArt'
+    | 'SheetMusic'
+    | 'ShortStory'
+    | 'SiteNavigationElement'
+    | 'SocialMediaPosting'
+    | 'SoftwareApplication'
+    | 'SoftwareSourceCode'
+    | 'SpecialAnnouncement'
+    | 'SpreadsheetDigitalDocument'
+    | 'Statement'
+    | 'Syllabus'
+    | 'Table'
+    | 'TechArticle'
+    | 'TextDigitalDocument'
+    | 'TextObject'
+    | 'Thesis'
+    | 'TVClip'
+    | 'TVEpisode'
+    | 'TVSeason'
+    | 'TVSeries'
+    | 'UserReview'
+    | 'VideoGallery'
+    | 'VideoGame'
+    | 'VideoGameClip'
+    | 'VideoGameSeries'
+    | 'VideoObject'
+    | 'VideoObjectSnapshot'
+    | 'VisualArtwork'
+    | 'WebApplication'
+    | 'WebContent'
+    | 'WebPage'
+    | 'WebPageElement'
+    | 'WebSite'
+    | 'WPAdBlock'
+    | 'WPFooter'
+    | 'WPHeader'
+    | 'WPSideBar'
+  )[];
+  updatedAt: string;
+  createdAt: string;
+  _status?: ('draft' | 'published') | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "work-categories".
+ */
+export interface WorkCategory {
+  id: number;
+  name: string;
+  /**
+   * When enabled, the slug will auto-generate from the title field on save and autosave.
+   */
+  generateSlug?: boolean | null;
+  slug: string;
+  description?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "work-tags".
+ */
+export interface WorkTag {
+  id: number;
+  name: string;
+  /**
+   * When enabled, the slug will auto-generate from the title field on save and autosave.
+   */
+  generateSlug?: boolean | null;
+  slug: string;
+  description?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "TextBlock".
+ */
+export interface TextBlock {
+  text: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  };
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'text';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "MediaBlock".
+ */
+export interface MediaBlock {
+  media: number | Media;
+  caption?: string | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'media';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "GalleryBlock".
+ */
+export interface GalleryBlock {
+  items: {
+    media: number | Media;
+    caption?: string | null;
+    id?: string | null;
+  }[];
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'gallery';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "EmbedBlock".
+ */
+export interface EmbedBlock {
+  url: string;
+  caption?: string | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'embed';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "events".
+ */
+export interface Event {
+  id: number;
+  title: string;
+  /**
+   * When enabled, the slug will auto-generate from the title field on save and autosave.
+   */
+  generateSlug?: boolean | null;
+  slug: string;
+  summary?: string | null;
+  coverImage?: (number | null) | Media;
+  type?: (number | null) | EventType;
+  description?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  timingMode: 'timed' | 'allDay';
+  /**
+   * YYYY-MM-DD. End date is inclusive.
+   */
+  startsOn?: string | null;
+  /**
+   * YYYY-MM-DD. End date is inclusive.
+   */
+  endsOn?: string | null;
+  startsAt?: string | null;
+  endsAt?: string | null;
+  /**
+   * IANA timezone used to display event times.
+   */
+  timezone?: string | null;
+  venue?: string | null;
+  address?: {
+    street?: string | null;
+    city?: string | null;
+    region?: string | null;
+    postalCode?: string | null;
+    country?: string | null;
+  };
+  eventURL?: string | null;
+  seo?: {
+    title?: string | null;
+    description?: string | null;
+    socialImage?: (number | null) | Media;
+  };
+  updatedAt: string;
+  createdAt: string;
+  _status?: ('draft' | 'published') | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "event-types".
+ */
+export interface EventType {
+  id: number;
+  name: string;
+  /**
+   * When enabled, the slug will auto-generate from the title field on save and autosave.
+   */
+  generateSlug?: boolean | null;
+  slug: string;
+  description?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "posts".
+ */
+export interface Post {
+  id: number;
+  title: string;
+  /**
+   * When enabled, the slug will auto-generate from the title field on save and autosave.
+   */
+  generateSlug?: boolean | null;
+  slug: string;
+  summary?: string | null;
+  coverImage?: (number | null) | Media;
+  tags?: (number | PostTag)[] | null;
+  publishedAt: string;
+  content?: (TextBlock | MediaBlock | GalleryBlock | EmbedBlock)[] | null;
+  seo?: {
+    title?: string | null;
+    description?: string | null;
+    socialImage?: (number | null) | Media;
+  };
+  updatedAt: string;
+  createdAt: string;
+  _status?: ('draft' | 'published') | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "post-tags".
+ */
+export interface PostTag {
+  id: number;
+  name: string;
+  /**
+   * When enabled, the slug will auto-generate from the title field on save and autosave.
+   */
+  generateSlug?: boolean | null;
+  slug: string;
+  description?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "pages".
+ */
+export interface Page {
+  id: number;
+  title: string;
+  /**
+   * When enabled, the slug will auto-generate from the title field on save and autosave.
+   */
+  generateSlug?: boolean | null;
+  slug: string;
+  summary?: string | null;
+  coverImage?: (number | null) | Media;
+  content?: (TextBlock | MediaBlock | GalleryBlock | EmbedBlock)[] | null;
+  seo?: {
+    title?: string | null;
+    description?: string | null;
+    socialImage?: (number | null) | Media;
+  };
+  schemaType:
+    | 'AboutPage'
+    | 'CheckoutPage'
+    | 'CollectionPage'
+    | 'ContactPage'
+    | 'FAQPage'
+    | 'ImageGallery'
+    | 'ItemPage'
+    | 'MediaGallery'
+    | 'MedicalWebPage'
+    | 'ProfilePage'
+    | 'QAPage'
+    | 'RealEstateListing'
+    | 'SearchResultsPage'
+    | 'VideoGallery'
+    | 'WebPage';
+  updatedAt: string;
+  createdAt: string;
+  _status?: ('draft' | 'published') | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv".
  */
 export interface PayloadKv {
@@ -393,6 +880,38 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'media-generations';
         value: number | MediaGeneration;
+      } | null)
+    | ({
+        relationTo: 'works';
+        value: number | Work;
+      } | null)
+    | ({
+        relationTo: 'events';
+        value: number | Event;
+      } | null)
+    | ({
+        relationTo: 'posts';
+        value: number | Post;
+      } | null)
+    | ({
+        relationTo: 'pages';
+        value: number | Page;
+      } | null)
+    | ({
+        relationTo: 'work-categories';
+        value: number | WorkCategory;
+      } | null)
+    | ({
+        relationTo: 'work-tags';
+        value: number | WorkTag;
+      } | null)
+    | ({
+        relationTo: 'event-types';
+        value: number | EventType;
+      } | null)
+    | ({
+        relationTo: 'post-tags';
+        value: number | PostTag;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -588,6 +1107,234 @@ export interface MediaGenerationsSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "works_select".
+ */
+export interface WorksSelect<T extends boolean = true> {
+  title?: T;
+  generateSlug?: T;
+  slug?: T;
+  summary?: T;
+  coverImage?: T;
+  category?: T;
+  tags?: T;
+  year?: T;
+  medium?: T;
+  dimensions?: T;
+  content?:
+    | T
+    | {
+        text?: T | TextBlockSelect<T>;
+        media?: T | MediaBlockSelect<T>;
+        gallery?: T | GalleryBlockSelect<T>;
+        embed?: T | EmbedBlockSelect<T>;
+      };
+  seo?:
+    | T
+    | {
+        title?: T;
+        description?: T;
+        socialImage?: T;
+      };
+  schemaTypes?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  _status?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "TextBlock_select".
+ */
+export interface TextBlockSelect<T extends boolean = true> {
+  text?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "MediaBlock_select".
+ */
+export interface MediaBlockSelect<T extends boolean = true> {
+  media?: T;
+  caption?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "GalleryBlock_select".
+ */
+export interface GalleryBlockSelect<T extends boolean = true> {
+  items?:
+    | T
+    | {
+        media?: T;
+        caption?: T;
+        id?: T;
+      };
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "EmbedBlock_select".
+ */
+export interface EmbedBlockSelect<T extends boolean = true> {
+  url?: T;
+  caption?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "events_select".
+ */
+export interface EventsSelect<T extends boolean = true> {
+  title?: T;
+  generateSlug?: T;
+  slug?: T;
+  summary?: T;
+  coverImage?: T;
+  type?: T;
+  description?: T;
+  timingMode?: T;
+  startsOn?: T;
+  endsOn?: T;
+  startsAt?: T;
+  endsAt?: T;
+  timezone?: T;
+  venue?: T;
+  address?:
+    | T
+    | {
+        street?: T;
+        city?: T;
+        region?: T;
+        postalCode?: T;
+        country?: T;
+      };
+  eventURL?: T;
+  seo?:
+    | T
+    | {
+        title?: T;
+        description?: T;
+        socialImage?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+  _status?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "posts_select".
+ */
+export interface PostsSelect<T extends boolean = true> {
+  title?: T;
+  generateSlug?: T;
+  slug?: T;
+  summary?: T;
+  coverImage?: T;
+  tags?: T;
+  publishedAt?: T;
+  content?:
+    | T
+    | {
+        text?: T | TextBlockSelect<T>;
+        media?: T | MediaBlockSelect<T>;
+        gallery?: T | GalleryBlockSelect<T>;
+        embed?: T | EmbedBlockSelect<T>;
+      };
+  seo?:
+    | T
+    | {
+        title?: T;
+        description?: T;
+        socialImage?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+  _status?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "pages_select".
+ */
+export interface PagesSelect<T extends boolean = true> {
+  title?: T;
+  generateSlug?: T;
+  slug?: T;
+  summary?: T;
+  coverImage?: T;
+  content?:
+    | T
+    | {
+        text?: T | TextBlockSelect<T>;
+        media?: T | MediaBlockSelect<T>;
+        gallery?: T | GalleryBlockSelect<T>;
+        embed?: T | EmbedBlockSelect<T>;
+      };
+  seo?:
+    | T
+    | {
+        title?: T;
+        description?: T;
+        socialImage?: T;
+      };
+  schemaType?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  _status?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "work-categories_select".
+ */
+export interface WorkCategoriesSelect<T extends boolean = true> {
+  name?: T;
+  generateSlug?: T;
+  slug?: T;
+  description?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "work-tags_select".
+ */
+export interface WorkTagsSelect<T extends boolean = true> {
+  name?: T;
+  generateSlug?: T;
+  slug?: T;
+  description?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "event-types_select".
+ */
+export interface EventTypesSelect<T extends boolean = true> {
+  name?: T;
+  generateSlug?: T;
+  slug?: T;
+  description?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "post-tags_select".
+ */
+export interface PostTagsSelect<T extends boolean = true> {
+  name?: T;
+  generateSlug?: T;
+  slug?: T;
+  description?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv_select".
  */
 export interface PayloadKvSelect<T extends boolean = true> {
@@ -656,6 +1403,64 @@ export interface PayloadMigrationsSelect<T extends boolean = true> {
   batch?: T;
   updatedAt?: T;
   createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "info".
+ */
+export interface Info {
+  id: number;
+  displayName?: string | null;
+  siteTitle?: string | null;
+  description?: string | null;
+  biography?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  socialImage?: (number | null) | Media;
+  favicon?: (number | null) | Media;
+  socialProfiles?:
+    | {
+        label: string;
+        url: string;
+        id?: string | null;
+      }[]
+    | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "info_select".
+ */
+export interface InfoSelect<T extends boolean = true> {
+  displayName?: T;
+  siteTitle?: T;
+  description?: T;
+  biography?: T;
+  socialImage?: T;
+  favicon?: T;
+  socialProfiles?:
+    | T
+    | {
+        label?: T;
+        url?: T;
+        id?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
