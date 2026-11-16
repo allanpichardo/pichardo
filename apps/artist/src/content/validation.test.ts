@@ -26,6 +26,8 @@ describe('content input validation', () => {
     expect(validTimezone('America/Los_Angeles')).toBe(true);
     expect(validTimezone('Invalid/Zone')).toBe(false);
     expect(validateSlug('blog', true)).not.toBe(true);
+    expect(validateSlug('styleguide', true)).not.toBe(true);
+    expect(validateSlug('styleguide')).toBe(true);
     expect(validateSlug('about-me', true)).toBe(true);
     expect(validateSlug('bad/path', true)).not.toBe(true);
     expect(validateRequiredURL('')).not.toBe(true);

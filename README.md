@@ -13,6 +13,8 @@ The artist application includes CMS content editing, basic public pages, and str
 
 Install Node **24.22.3**, pnpm **12.18.0**, Docker Engine or Docker Desktop, and Docker Compose. The Node version is recorded for asdf and other version managers. Select that version before installing dependencies.
 
+Run `corepack enable pnpm` to make the `pnpm` command available. If you use asdf, also run `asdf reshim nodejs`. Corepack selects the pnpm version pinned in `package.json`. The first run may download pnpm.
+
 Install FFmpeg and ffprobe with the SVT-AV1, H.264, Opus, and AAC codecs for artist uploads and processing. On macOS use `brew install ffmpeg`; on Debian or Ubuntu use `sudo apt-get install ffmpeg`. Production artist images include these tools.
 
 ```sh

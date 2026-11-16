@@ -5,6 +5,7 @@ export const reservedPageSlugs = new Set([
   'work',
   'events',
   'health',
+  'styleguide',
   '_next',
   'sitemap.xml',
   'robots.txt',
