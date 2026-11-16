@@ -1,0 +1,72 @@
+@use 'utopia-core-scss/src/utopia' as utopia;
+
+// https://utopia.fyi/type/calculator?c=350,20,1.2,1600,24,1.25,5,2
+:root {
+  @include utopia.generateTypeScale(
+    (
+      'minWidth': 350,
+      'maxWidth': 1600,
+      'minFontSize': 20,
+      'maxFontSize': 24,
+      'minTypeScale': 1.2,
+      'maxTypeScale': 1.25,
+      'positiveSteps': 5,
+      'negativeSteps': 2,
+      'prefix': 'step-',
+      'relativeTo': 'viewport-width',
+    )
+  );
+  @include utopia.generateSpaceScale(
+    (
+      'minWidth': 350,
+      'maxWidth': 1600,
+      'minSize': 20,
+      'maxSize': 24,
+      'positiveSteps': (
+        1.5,
+        2,
+        3,
+        4,
+        6,
+      ),
+      'negativeSteps': (
+        0.75,
+        0.5,
+        0.25,
+      ),
+      'customSizes': ('s-l',),
+      'prefix': 'space-',
+      'relativeTo': 'viewport-width',
+    )
+  );
+
+  --color-blue: #4b91dc;
+  --color-purple: #840277;
+  --color-yellow: #f2cf1d;
+  --color-pink: #eb2f86;
+  --color-navy: #211959;
+  --color-white: #fff;
+
+  --color-background: var(--color-white);
+  --color-text: var(--color-navy);
+  --color-link: var(--color-purple);
+  --color-link-hover: var(--color-navy);
+  --color-focus: var(--color-purple);
+  --color-selection-background: var(--color-yellow);
+  --color-selection-text: var(--color-navy);
+
+  --grid-max-width: 93rem;
+  --grid-gutter: var(--space-s-l, clamp(1.25rem, 0.7118rem + 2.4605vw, 3rem));
+  --grid-columns: 12;
+}
+
+.u-container {
+  max-width: var(--grid-max-width);
+  padding-inline: var(--grid-gutter);
+  margin-inline: auto;
+}
+
+.u-grid {
+  display: grid;
+  gap: var(--grid-gutter);
+}

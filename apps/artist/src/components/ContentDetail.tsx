@@ -52,7 +52,7 @@ export async function ContentDetail({entry}: {entry: ContentEntry}) {
   const {graph} = await pageSEO(entry);
   const doc = entry.doc;
   return (
-    <main>
+    <main className="u-container">
       <SEO graph={graph} />
       <article>
         <h1>{doc.title}</h1>

@@ -25,7 +25,7 @@ export default async function Home() {
     {title: 'Pages', collection: 'pages', docs: pages},
   ] as const;
   return (
-    <main>
+    <main className="u-container">
       <SEO graph={seo.graph} />
       <h1>{info.displayName || 'Allan Pichardo'}</h1>
       <p>{info.description || 'Artist and creative technologist.'}</p>

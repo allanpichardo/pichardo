@@ -13,7 +13,7 @@ export default async function BlogPage() {
   const posts = await getPublished('posts');
   const {graph} = await pageSEO({kind: 'blog', posts});
   return (
-    <main>
+    <main className="u-container">
       <SEO graph={graph} />
       <h1>Blog</h1>
       {posts.length ? (

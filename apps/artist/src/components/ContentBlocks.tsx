@@ -58,7 +58,6 @@ export function MediaFigure({
           preload="metadata"
           poster={media.video?.poster?.url ?? undefined}
           aria-label={media.alt}
-          style={{maxWidth: '100%', height: 'auto'}}
         >
           {media.video?.webm?.url && (
             <source src={media.video.webm.url} type="video/webm" />
@@ -77,7 +76,6 @@ export function MediaFigure({
           width={media.width ?? undefined}
           height={media.height ?? undefined}
           loading="lazy"
-          style={{maxWidth: '100%', height: 'auto'}}
         />
       )}
       {caption && <figcaption>{caption}</figcaption>}
