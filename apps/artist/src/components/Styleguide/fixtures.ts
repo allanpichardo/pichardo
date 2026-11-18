@@ -102,6 +102,7 @@ export const sampleVideo = {
   video: {
     mp4: {url: '/styleguide/motion-study.mp4'},
     poster: {url: '/styleguide/study-01.svg'},
+    preview: {url: '/styleguide/motion-study.gif'},
   },
 } satisfies Media;
 
@@ -111,14 +112,50 @@ export const gallery = [
     items: [
       {
         media: sampleImage,
+        aspectRatio: '4:5',
         caption: '01 / Shape and field. Local sample artwork.',
       },
       {
         media: secondImage,
+        aspectRatio: '5:4',
         caption: '02 / Rhythm and interval. Local sample artwork.',
+      },
+      {
+        media: sampleImage,
+        caption: '03 / Shape and field at its natural proportions.',
+      },
+      {
+        media: secondImage,
+        aspectRatio: '4:5',
+        caption: '04 / A portrait crop of rhythm and interval.',
+      },
+      {
+        media: sampleVideo,
+        caption: '05 / Motion study. Play the video in the lightbox.',
+      },
+      {
+        media: secondImage,
+        aspectRatio: '5:4',
+        caption: '06 / Rhythm and interval, landscape crop.',
+      },
+      {
+        media: sampleImage,
+        caption:
+          '07 / Extended installation notes. ' +
+          'The work combines projected shapes, repeated intervals, and shifting fields of color. '.repeat(
+            30,
+          ),
+      },
+      {
+        media: {
+          ...sampleVideo,
+          video: {mp4: {url: '/styleguide/motion-study.mp4'}},
+        },
+        caption: '08 / Video without a poster.',
       },
     ],
   },
+  {blockType: 'gallery', items: [{media: secondImage}]},
 ] satisfies NonNullable<Work['content']>;
 
 export const embeds = [

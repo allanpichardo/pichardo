@@ -211,13 +211,23 @@ test('CMS publishing, content blocks, blog URLs, Info metadata, and connected JS
     await expect(page.getByRole('heading', {level: 1})).toHaveText(work.title);
     await expect(page.getByText('Rich text body', {exact: true})).toBeVisible();
     await expect(page.getByText('Single image caption')).toBeVisible();
-    await expect(page.getByText('Gallery image caption')).toBeVisible();
+    await expect(page.getByText('Gallery image caption')).toHaveCount(0);
     await expect(
       page.locator('.ContentBlocks > .MediaFigure img'),
     ).toHaveAttribute('data-aspect-ratio', '5:4');
-    await expect(
-      page.locator('.MediaGallery .MediaFigure img'),
-    ).toHaveAttribute('data-aspect-ratio', '4:5');
+    await expect(page.locator('.MediaGallery button img')).toHaveAttribute(
+      'data-aspect-ratio',
+      '4:5',
+    );
+    await page.locator('.MediaGallery button').click();
+    const lightbox = page.getByRole('dialog', {name: 'Gallery', exact: true});
+    await expect(lightbox.getByText('Gallery image caption')).toBeVisible();
+    await expect(lightbox.locator('img')).toHaveAttribute(
+      'data-aspect-ratio',
+      'fit',
+    );
+    await lightbox.getByRole('button', {name: 'Close', exact: true}).click();
+    await expect(lightbox).toHaveCount(0);
     const videoEmbed = page.getByRole('region', {
       name: 'Video embed',
       exact: true,

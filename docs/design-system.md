@@ -91,6 +91,24 @@ Payload exposes the same choices as **Aspect ratio** on media blocks and each
 gallery item. The default is `fit`. The selection belongs to the placement,
 so the same uploaded image can appear with different ratios in different blocks.
 
+`MediaGallery` fills the content width. Below `50rem` it uses one column; at
+`50rem` and above it uses four masonry columns with `--space-xs` gaps between
+thumbnails in both directions.
+Items follow CMS order into the shortest column, with ties resolved left to
+right. Thumbnails preserve each placement's image ratio and omit captions.
+Video thumbnails use a poster or a labeled fallback. Hovering a video with a
+GIF preview shows the animation; leaving restores the poster. Full video
+playback remains in the lightbox.
+
+Selecting a thumbnail opens a modal lightbox with a navy background and yellow
+text and controls. The lightbox shows uncropped media and its caption. Circular
+arrow buttons stay at the left and right edges of the lightbox's media area,
+centered vertically, and wrap through the gallery. Only the center cell with
+the media and caption scrolls when necessary; navigation stays fixed across
+items. Arrow keys navigate unless focus is in the video
+player. Close, Escape, or clicking the backdrop dismisses the lightbox
+and restores focus to the thumbnail. A single-item gallery omits navigation.
+
 ## Write a component module
 
 Name the root class after its component, including capitalization. Apply both
