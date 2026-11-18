@@ -1,3 +1,8 @@
 .EmbeddedMedia {
   min-width: 0;
+
+  @media (min-width: 50rem) {
+    margin: 0 auto;
+    max-width: calc((100% - var(--grid-gutter)) * 0.66);
+  }
 }

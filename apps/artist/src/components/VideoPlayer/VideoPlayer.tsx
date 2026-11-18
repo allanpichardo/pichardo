@@ -70,9 +70,6 @@ export function VideoPlayer({
           )}
         </NeutralVideoSkin>
       </Player>
-      <a className={styles.fallback} href={href}>
-        {linkLabel}
-      </a>
     </div>
   );
 }
